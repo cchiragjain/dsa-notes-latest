@@ -52,6 +52,12 @@
 - [Shortest Path in Undirected Graph with unit weight](#shortest-path-in-undirected-graph-with-unit-weight)
   - [Approach](#approach-14)
   - [Code](#code-16)
+- [127. Word Ladder](#127-word-ladder)
+  - [Approach](#approach-15)
+  - [Code](#code-17)
+- [126. Word Ladder II](#126-word-ladder-ii)
+  - [Approach](#approach-16)
+  - [Code](#code-18)
 
 # [323. Number of Connected Components in an Undirected Graph](https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/description/)
 
@@ -1466,7 +1472,7 @@ public:
 
 # [Alien Dictionary](https://www.geeksforgeeks.org/problems/alien-dictionary/1)
 
-![alt text](image.png)
+![alt text](images/image.png)
 
 ## Approach
 
@@ -1554,7 +1560,7 @@ class Solution {
 
 # Shortest path in DAG
 
-![alt text](image-1.png)
+![alt text](images/image-1.png)
 
 - Important how to define graphs with weight
 
@@ -1646,7 +1652,7 @@ class Solution {
 
 # [Shortest Path in Undirected Graph with unit weight](https://www.geeksforgeeks.org/problems/shortest-path-in-undirected-graph-having-unit-distance/1?utm_source=youtube&utm_medium=collab_striver_ytdescription&utm_campaign=shortest-path-in-undirected-graph-having-unit-distance)
 
-![alt text](image-2.png)
+![alt text](images/image-2.png)
 
 ## Approach
 
@@ -1690,4 +1696,143 @@ class Solution {
         return dist;
     }
 };
+```
+
+# [127. Word Ladder](https://leetcode.com/problems/word-ladder/description/)
+
+A **transformation sequence** from word <code>beginWord</code> to word <code>endWord</code> using a dictionary <code>wordList</code> is a sequence of words <code>beginWord -> s<sub>1</sub> -> s<sub>2</sub> -> ... -> s<sub>k</sub></code> such that:
+
+- Every adjacent pair of words differs by a single letter.
+- Every <code>s<sub>i</sub></code> for <code>1 <= i <= k</code> is in <code>wordList</code>. Note that <code>beginWord</code> does not need to be in <code>wordList</code>.
+- <code>s<sub>k</sub> == endWord</code>
+
+Given two words, <code>beginWord</code> and <code>endWord</code>, and a dictionary <code>wordList</code>, return the **number of words** in the **shortest transformation sequence** from <code>beginWord</code> to <code>endWord</code>, or <code>0</code> if no such sequence exists.
+
+**Example 1:**
+
+```
+Input: beginWord = "hit", endWord = "cog", wordList = ["hot","dot","dog","lot","log","cog"]
+Output: 5
+Explanation: One shortest transformation sequence is "hit" -> "hot" -> "dot" -> "dog" -> cog", which is 5 words long.
+```
+
+**Example 2:**
+
+```
+Input: beginWord = "hit", endWord = "cog", wordList = ["hot","dot","dog","lot","log"]
+Output: 0
+Explanation: The endWord "cog" is not in wordList, therefore there is no valid transformation sequence.
+```
+
+**Constraints:**
+
+- <code>1 <= beginWord.length <= 10</code>
+- <code>endWord.length == beginWord.length</code>
+- <code>1 <= wordList.length <= 5000</code>
+- <code>wordList[i].length == beginWord.length</code>
+- <code>beginWord</code>, <code>endWord</code>, and <code>wordList[i]</code> consist of lowercase English letters.
+- <code>beginWord != endWord</code>
+- All the words in <code>wordList</code> are **unique** .
+
+## Approach
+
+- Pattern: BFS shortest path
+
+## Code
+
+```cpp
+class Solution {
+public:
+    int ladderLength(string beginWord, string endWord, vector<string>& wordList) {
+        int result = 0;
+
+        queue<pair<string, int>> q; // stores word vs the level this word was formed on
+        // ex. beginWord is at level 1 -> then after a single transformation it is at level 2
+        unordered_set<string> wordMap;
+
+        q.push({beginWord, 1});
+        // create a map of all available words for O(1) access later
+        for(string word: wordList){
+            wordMap.insert(word);
+        }
+
+        while(!q.empty()){
+            string currentWord = q.front().first;
+            int level = q.front().second;
+
+            q.pop();
+
+            // if at any moment we reach the end word then return the level
+            if(currentWord == endWord){
+                return level;
+            }
+
+            // now for each charcter in this word we are doing a change and testing if it
+            // exists in our allowed words or not
+            // if it exists then again for that word check for all characters
+            // also remove this word from set since can land again at this word through other transformations.
+            for(int i = 0; i < currentWord.size(); i++){
+                string testWord = currentWord;
+                for(char c = 'a'; c <= 'z'; c++){
+                    testWord[i] = c;
+                    if(wordMap.find(testWord) != wordMap.end()){
+                        q.push({testWord, level + 1});
+                        wordMap.erase(testWord);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+};
+```
+
+# [126. Word Ladder II](https://leetcode.com/problems/word-ladder-ii/description/)
+
+A **transformation sequence** from word <code>beginWord</code> to word <code>endWord</code> using a dictionary <code>wordList</code> is a sequence of words <code>beginWord -> s<sub>1</sub> -> s<sub>2</sub> -> ... -> s<sub>k</sub></code> such that:
+
+- Every adjacent pair of words differs by a single letter.
+- Every <code>s<sub>i</sub></code> for <code>1 <= i <= k</code> is in <code>wordList</code>. Note that <code>beginWord</code> does not need to be in <code>wordList</code>.
+- <code>s<sub>k</sub> == endWord</code>
+
+Given two words, <code>beginWord</code> and <code>endWord</code>, and a dictionary <code>wordList</code>, return all the **shortest transformation sequences** from <code>beginWord</code> to <code>endWord</code>, or an empty list if no such sequence exists. Each sequence should be returned as a list of the words <code>[beginWord, s<sub>1</sub>, s<sub>2</sub>, ..., s<sub>k</sub>]</code>.
+
+**Example 1:**
+
+```
+Input: beginWord = "hit", endWord = "cog", wordList = ["hot","dot","dog","lot","log","cog"]
+Output: [["hit","hot","dot","dog","cog"],["hit","hot","lot","log","cog"]]
+Explanation:There are 2 shortest transformation sequences:
+"hit" -> "hot" -> "dot" -> "dog" -> "cog"
+"hit" -> "hot" -> "lot" -> "log" -> "cog"
+```
+
+**Example 2:**
+
+```
+Input: beginWord = "hit", endWord = "cog", wordList = ["hot","dot","dog","lot","log"]
+Output: []
+Explanation: The endWord "cog" is not in wordList, therefore there is no valid transformation sequence.
+```
+
+**Constraints:**
+
+- <code>1 <= beginWord.length <= 5</code>
+- <code>endWord.length == beginWord.length</code>
+- <code>1 <= wordList.length <= 500</code>
+- <code>wordList[i].length == beginWord.length</code>
+- <code>beginWord</code>, <code>endWord</code>, and <code>wordList[i]</code> consist of lowercase English letters.
+- <code>beginWord != endWord</code>
+- All the words in <code>wordList</code> are **unique** .
+- The **sum** of all shortest transformation sequences does not exceed <code>10^5</code>.
+
+## Approach
+
+- Pattern: BFS based shortest path
+
+## Code
+
+```cpp
+
 ```
