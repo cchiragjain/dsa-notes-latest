@@ -1,1 +1,3 @@
+# Index
+
 - [Graphs](./graphs.md)
