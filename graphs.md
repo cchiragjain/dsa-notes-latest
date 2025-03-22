@@ -1,6 +1,9 @@
 - [323. Number of Connected Components in an Undirected Graph](#323-number-of-connected-components-in-an-undirected-graph)
   - [Approach](#approach)
   - [Code](#code)
+- [547. Number of Provinces](#547-number-of-provinces)
+  - [Approach](#approach-1)
+  - [Code](#code-1)
 
 # [323. Number of Connected Components in an Undirected Graph](https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/description/)
 
@@ -35,6 +38,7 @@ Output: 1
 
 ## Approach
 
+- **Pattern: Basic DFS**
 - Each dfs call can traverse its own graph independently on its own. So each component basically is a single dfs call only. So we can keep track of number of dfs calls.
 - T.C => O(V + E) S.C => O(V + E)
 
@@ -82,6 +86,97 @@ public:
         }
 
         return count;
+    }
+};
+```
+
+# [547. Number of Provinces](https://leetcode.com/problems/number-of-provinces/description/)
+
+There are <code>n</code> cities. Some of them are connected, while some are not. If city <code>a</code> is connected directly with city <code>b</code>, and city <code>b</code> is connected directly with city <code>c</code>, then city <code>a</code> is connected indirectly with city <code>c</code>.
+
+A **province** is a group of directly or indirectly connected cities and no other cities outside of the group.
+
+You are given an <code>n x n</code> matrix <code>isConnected</code> where <code>isConnected[i][j] = 1</code> if the <code>i^th</code> city and the <code>j^th</code> city are directly connected, and <code>isConnected[i][j] = 0</code> otherwise.
+
+Return the total number of **provinces** .
+
+**Example 1:**
+<img alt="" src="https://assets.leetcode.com/uploads/2020/12/24/graph1.jpg" style="width: 222px; height: 142px;">
+
+```
+Input: isConnected = [[1,1,0],[1,1,0],[0,0,1]]
+Output: 2
+```
+
+**Example 2:**
+<img alt="" src="https://assets.leetcode.com/uploads/2020/12/24/graph2.jpg" style="width: 222px; height: 142px;">
+
+```
+Input: isConnected = [[1,0,0],[0,1,0],[0,0,1]]
+Output: 3
+```
+
+**Constraints:**
+
+- <code>1 <= n <= 200</code>
+- <code>n == isConnected.length</code>
+- <code>n == isConnected[i].length</code>
+- <code>isConnected[i][j]</code> is <code>1</code> or <code>0</code>.
+- <code>isConnected[i][i] == 1</code>
+- <code>isConnected[i][j] == isConnected[j][i]</code>
+
+## Approach
+
+- **Pattern: Basic DFS**
+- Same as above new thing was how to convert adj mat to adj list
+
+## Code
+
+```cpp
+class Solution {
+private:
+    void dfs(int node, vector<bool>& visited, vector<vector<int>>& adjList){
+        visited[node] = true;
+
+        for(auto& neighbour : adjList[node]){
+            if(!visited[neighbour]){
+                dfs(neighbour, visited, adjList);
+            }
+        }
+    }
+
+public:
+    int findCircleNum(vector<vector<int>>& isConnected) {
+        // given the adjacency matrix we can convert to adj list first
+        int v = isConnected.size();
+        vector<vector<int>> adjList(v);
+
+        for(int i = 0; i < v; i++){
+            for(int j = 0; j < v; j++){
+                // if there exists an edge b/w i and j and i does not connect to j ( no self loop )
+                if(isConnected[i][j] == 1 && i != j){
+                    adjList[i].push_back(j);
+                    adjList[j].push_back(i);
+                }
+            }
+        }
+
+        int countOfProvinces = 0;
+        vector<bool> visited(v, false);
+
+        // har ek not visited node ke liye dfs call karege
+        // jabhi uska dfs khatam hoga matlab usne apne vaala pura graph explore kar lia h
+        // yeh dfs se pehel loop isliye lagaya h kyuki graph connected nahi h
+        // similar to finding number of connected components
+        for(int i = 0; i < v; i++){
+            // imagine if starting at a node then uska dfs call karte hi voh apna pura graph visit karleta h
+            if(!visited[i]){
+                dfs(i, visited, adjList);
+                countOfProvinces++;
+            }
+        }
+
+        return countOfProvinces;
     }
 };
 ```
