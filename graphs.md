@@ -58,6 +58,13 @@
 - [126. Word Ladder II](#126-word-ladder-ii)
   - [Approach](#approach-16)
   - [Code](#code-18)
+- [Dijkstra Algorithm](#dijkstra-algorithm)
+  - [Approach](#approach-17)
+  - [Code](#code-19)
+    - [Using min heap](#using-min-heap)
+- [Print Shortest Path in Weighted Undirected Graph](#print-shortest-path-in-weighted-undirected-graph)
+  - [Approach](#approach-18)
+    - [Code](#code-20)
 
 # [323. Number of Connected Components in an Undirected Graph](https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/description/)
 
@@ -1788,51 +1795,222 @@ public:
 };
 ```
 
-# [126. Word Ladder II](https://leetcode.com/problems/word-ladder-ii/description/)
+# [126. Word Ladder II](https://www.geeksforgeeks.org/problems/word-ladder-ii/1)
 
-A **transformation sequence** from word <code>beginWord</code> to word <code>endWord</code> using a dictionary <code>wordList</code> is a sequence of words <code>beginWord -> s<sub>1</sub> -> s<sub>2</sub> -> ... -> s<sub>k</sub></code> such that:
-
-- Every adjacent pair of words differs by a single letter.
-- Every <code>s<sub>i</sub></code> for <code>1 <= i <= k</code> is in <code>wordList</code>. Note that <code>beginWord</code> does not need to be in <code>wordList</code>.
-- <code>s<sub>k</sub> == endWord</code>
-
-Given two words, <code>beginWord</code> and <code>endWord</code>, and a dictionary <code>wordList</code>, return all the **shortest transformation sequences** from <code>beginWord</code> to <code>endWord</code>, or an empty list if no such sequence exists. Each sequence should be returned as a list of the words <code>[beginWord, s<sub>1</sub>, s<sub>2</sub>, ..., s<sub>k</sub>]</code>.
-
-**Example 1:**
-
-```
-Input: beginWord = "hit", endWord = "cog", wordList = ["hot","dot","dog","lot","log","cog"]
-Output: [["hit","hot","dot","dog","cog"],["hit","hot","lot","log","cog"]]
-Explanation:There are 2 shortest transformation sequences:
-"hit" -> "hot" -> "dot" -> "dog" -> "cog"
-"hit" -> "hot" -> "lot" -> "log" -> "cog"
-```
-
-**Example 2:**
-
-```
-Input: beginWord = "hit", endWord = "cog", wordList = ["hot","dot","dog","lot","log"]
-Output: []
-Explanation: The endWord "cog" is not in wordList, therefore there is no valid transformation sequence.
-```
-
-**Constraints:**
-
-- <code>1 <= beginWord.length <= 5</code>
-- <code>endWord.length == beginWord.length</code>
-- <code>1 <= wordList.length <= 500</code>
-- <code>wordList[i].length == beginWord.length</code>
-- <code>beginWord</code>, <code>endWord</code>, and <code>wordList[i]</code> consist of lowercase English letters.
-- <code>beginWord != endWord</code>
-- All the words in <code>wordList</code> are **unique** .
-- The **sum** of all shortest transformation sequences does not exceed <code>10^5</code>.
+![alt text](images/image-3.png)
 
 ## Approach
 
 - Pattern: BFS based shortest path
+- T.C => O(M _ N _ 26) (N word list size, M average word length)
 
 ## Code
 
-```cpp
+- This is not the most optimised solution for this ( not working on leetcode )
 
+```cpp
+/*
+    in word ladder 1 we only needed to find the length of transformation but in this we
+    need to find all so cant remove the word from wordlist just after single usage
+    need to make sure that all similar length transformations have access to that word
+    - basically means ki agar hit se hot fir usse lot and dot bana dia then koi aur chota path isse exist nahi karta jo ki hot banade firse jo can remove that word then
+    and not at the first occurence
+*/
+
+class Solution {
+public:
+    vector<vector<string>> findLadders(string beginWord, string endWord, vector<string>& wordList) {
+        vector<vector<string>> ans;
+
+        unordered_set<string> wordMap;
+        unordered_set<string> wordsUsedOnCurrentLevel; // stores all the words that have been used in transformations on the current level. These can be removed from the wordMap when the level has been processed
+
+        queue<vector<string>> q; // stores transformation till that level
+
+        for(string word: wordList){
+            wordMap.insert(word); // create hashset for O(1) lookups later
+        }
+
+        q.push({beginWord});
+        wordsUsedOnCurrentLevel.insert(beginWord);
+
+        while(!q.empty()){
+            int levelSize = q.size();
+            // process all words of this level
+            for(int i = 0; i < levelSize; i++){
+                vector<string> sequence = q.front();
+                q.pop();
+                string lastWordOfSequence = sequence.back();
+
+                // check for if equals last word
+                if(lastWordOfSequence == endWord && ans.size() == 0){
+                    ans.push_back(sequence);
+                } else if(lastWordOfSequence == endWord && sequence.size() == ans.back().size()){
+                    // checking since there can be a case where shortest path was found before and new paths that are bigger in size are formed. these can be ignored
+                    ans.push_back(sequence);
+                }
+                // find all possible combinations
+                for(int i = 0; i < lastWordOfSequence.size(); i++){
+                    string original = lastWordOfSequence;
+                    for(char ch = 'a'; ch <= 'z'; ch++){
+                        lastWordOfSequence[i] = ch;
+                        if(wordMap.find(lastWordOfSequence) != wordMap.end()){
+                            sequence.push_back(lastWordOfSequence);
+                            wordsUsedOnCurrentLevel.insert(lastWordOfSequence);
+                            q.push(sequence);
+                            sequence.pop_back(); // remove to let other sequences also take place ex. hit -> hot can go either to dot and also to lot
+                        }
+                    }
+                    lastWordOfSequence = original;
+                }
+            }
+
+            // when the level has been processed all shortest possible till that word have been found
+            // can remove all used on this level from wordMap
+
+            for(string word: wordsUsedOnCurrentLevel) wordMap.erase(word);
+
+            wordsUsedOnCurrentLevel.clear();
+        }
+
+        return ans;
+    }
+};
+```
+
+# [Dijkstra Algorithm](https://www.geeksforgeeks.org/problems/implementing-dijkstra-set-1-adjacency-matrix/1)
+
+![alt text](images/image-4.png)
+
+## Approach
+
+- Very similar to finding shortest path in undirected weighted graph but using min heap instead(isliye jisse ki hamesha sabse shortest path vaala distance hi pehle pick ho saving from unnecessary calculations) ( ek chote raste se hi aur chota rasta milege but agar bada pehle process karlia toh baad mein jakar chota mile increasing tc)
+- Will never work for graphs with negative weight ( or shortest path ( if we are going somewhere we need to give something positive )) ( if we try with negative weights will keep on running as new calculated distance will always be less than previous )
+- T.C for pq => O(V + E) \* O(logV) ( standard bfs + v vertices will be inserted to pq )
+- Can also use set for storing ( the t.c will be same and may reduce some future iterations )
+
+## Code
+
+### Using min heap
+
+```cpp
+class Solution {
+  public:
+    // Function to find the shortest distance of all the vertices
+    // from the source vertex src.
+    vector<int> dijkstra(vector<vector<pair<int, int>>> &adj, int src) {
+        int n = adj.size();
+
+        vector<int> distance(n, INT_MAX);
+        priority_queue<pair<int,int>, vector<pair<int,int>>, greater<pair<int,int>>> pq; // create min heap
+        // will store distance vs node
+        pq.push({0, src}); // src node will have 0 distance
+        distance[src] = 0;
+
+        while(!pq.empty()){
+            int distanceTillHere = pq.top().first;
+            int node = pq.top().second;
+
+            pq.pop();
+
+            for(auto it: adj[node]){
+                int adjacentNode = it.first;
+                int edgeWeight = it.second;
+
+                // update if new distance is less
+                if(distanceTillHere + edgeWeight < distance[adjacentNode]){
+                    distance[adjacentNode] = distanceTillHere + edgeWeight;
+                    // push so that this shortest path can be further explored
+                    pq.push({distanceTillHere + edgeWeight, adjacentNode});
+                }
+            }
+        }
+
+        return distance;
+    }
+};
+```
+
+# [Print Shortest Path in Weighted Undirected Graph](https://www.geeksforgeeks.org/problems/shortest-path-in-weighted-undirected-graph/1)
+
+![alt text](images/image-5.png)
+
+## Approach
+
+- Can use dijkstra to find shortest path weight but also need to return the path.
+- We can create a parent array for each node which will store from where this node got its distance. Then for the n node create path by backtracking to parent nodes till we dont reach initial node.
+- T.C => O(V + E)(log V) ( dijkstra ki hi h yeh )
+
+### Code
+
+```cpp
+#define pii pair<int,int>
+
+class Solution {
+  public:
+    vector<int> shortestPath(int n, int m, vector<vector<int>>& edges) {
+        vector<vector<pii>> adjList(n + 1);
+        for(int i = 0; i < m; i++){
+            vector<int> edge = edges[i];
+            int u = edge[0];
+            int v = edge[1];
+            int wt = edge[2];
+
+            adjList[u].push_back({v, wt});
+            adjList[v].push_back({u, wt});
+        }
+
+        vector<int> result;
+
+        priority_queue<pii,vector<pii>, greater<pii>> pq;
+        vector<int> distance(n + 1, 1e9);
+        vector<int> parent(n + 1);
+
+        // update values to store self as parent
+        for(int i = 1; i <= n; i++){
+            parent[i] = i;
+        }
+
+        distance[1] = 0;
+        pq.push({0, 1}); // stores distance vs node
+
+        while(!pq.empty()){
+            int distanceTillHere = pq.top().first;
+            int node = pq.top().second;
+
+            pq.pop();
+            for(auto it: adjList[node]){
+                int adjacentNode = it.first;
+                int edgeWeight = it.second;
+
+                if(edgeWeight + distanceTillHere < distance[adjacentNode]){
+                    distance[adjacentNode] = edgeWeight + distanceTillHere;
+                    pq.push({distance[adjacentNode], adjacentNode});
+                    parent[adjacentNode] = node;
+                }
+            }
+        }
+
+        if(distance[n] == 1e9) return {-1}; // not able to reach this node
+
+        result.push_back(distance[n]); // push weight at start of the result
+
+        stack<int> st;
+        int node = n;
+
+        while(parent[node] != node){
+            st.push(node);
+            node = parent[node];
+        }
+
+        st.push(1);
+
+        while(!st.empty()){
+            result.push_back(st.top());
+            st.pop();
+        }
+
+        return result;
+    }
+};
 ```
