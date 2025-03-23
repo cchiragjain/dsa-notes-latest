@@ -83,6 +83,8 @@
 - [1976. Number of Ways to Arrive at Destination](#1976-number-of-ways-to-arrive-at-destination)
   - [Approach](#approach-23)
   - [Code](#code-25)
+- [Bellman Ford](#bellman-ford)
+  - [Code](#code-26)
 
 # [323. Number of Connected Components in an Undirected Graph](https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/description/)
 
@@ -2483,6 +2485,57 @@ public:
         }
 
         return ways[n - 1] % mod;
+    }
+};
+```
+
+# [Bellman Ford](https://www.geeksforgeeks.org/problems/distance-from-the-source-bellman-ford-algorithm/1)
+
+![alt text](images/image-7.png)
+
+- Bellman ford is used to find shortest path similar to dijkstra but works for a graph with negative weights as well. Complexity is higher as compared to Dijkstra (V \* E)
+- Can also be used to find if a negative cycle exists in a graph( any cycle that sums negative )
+- Mostly asked as follow up to a dijkstra question ( as what if there are negative cycles )
+
+## Code
+
+```cpp
+class Solution {
+  public:
+    vector<int> bellmanFord(int V, vector<vector<int>>& edges, int src) {
+        vector<int> distance(V, 1e8);
+        distance[src] = 0;
+
+        // V - 1 times for all edges do relaxation
+        for(int i = 0; i < V - 1; i++){
+            for(auto& edge: edges){
+                int u = edge[0];
+                int v = edge[1];
+                int wt = edge[2];
+
+                // relaxation process for all edges
+                if(distance[u] != 1e8 && distance[u] + wt < distance[v]){
+                    distance[v] = distance[u] + wt;
+                }
+            }
+        }
+
+        // if all edges are relaxed then the below will not work
+        // but if after v - 1 iterations we can still relax then that means
+        // there is a negative cycle
+        // 1 final iteration
+        for(auto& edge: edges){
+            int u = edge[0];
+            int v = edge[1];
+            int wt = edge[2];
+
+            if(distance[u] != 1e8 && distance[u] + wt < distance[v]){
+                return {-1}; // there exists a node that can be visited but after
+                // v - 1 relaxations it still has negative dist ( negative cycle exists )
+            }
+        }
+
+        return distance;
     }
 };
 ```
