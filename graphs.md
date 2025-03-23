@@ -68,6 +68,15 @@
 - [Print Shortest Path in Weighted Undirected Graph](#print-shortest-path-in-weighted-undirected-graph)
   - [Approach](#approach-18)
     - [Code](#code-20)
+- [1091. Shortest Path in Binary Matrix](#1091-shortest-path-in-binary-matrix)
+  - [Approach](#approach-19)
+  - [Code](#code-21)
+- [1631. Path With Minimum Effort](#1631-path-with-minimum-effort)
+  - [Approach](#approach-20)
+  - [Code](#code-22)
+- [787. Cheapest Flights Within K Stops](#787-cheapest-flights-within-k-stops)
+  - [Approach](#approach-21)
+  - [Code](#code-23)
 
 # [323. Number of Connected Components in an Undirected Graph](https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/description/)
 
@@ -1891,6 +1900,7 @@ public:
 - Will never work for graphs with negative weight ( or shortest path ( if we are going somewhere we need to give something positive )) ( if we try with negative weights will keep on running as new calculated distance will always be less than previous )
 - T.C for pq => O(V + E) \* O(logV) ( standard bfs + v vertices will be inserted to pq )
 - Can also use set for storing ( the t.c will be same and may reduce some future iterations )
+- **Useful only when graph edges have weights if unit weight edges then normal bfs will work in case of shortest path**
 
 ## Code
 
@@ -2014,6 +2024,310 @@ class Solution {
         }
 
         return result;
+    }
+};
+```
+
+# [1091. Shortest Path in Binary Matrix](https://leetcode.com/problems/shortest-path-in-binary-matrix/description/)
+
+Given an <code>n x n</code> binary matrix <code>grid</code>, return the length of the shortest **clear path** in the matrix. If there is no clear path, return <code>-1</code>.
+
+A **clear path** in a binary matrix is a path from the **top-left** cell (i.e., <code>(0, 0)</code>) to the **bottom-right** cell (i.e., <code>(n - 1, n - 1)</code>) such that:
+
+- All the visited cells of the path are <code>0</code>.
+- All the adjacent cells of the path are **8-directionally** connected (i.e., they are different and they share an edge or a corner).
+
+The **length of a clear path** is the number of visited cells of this path.
+
+**Example 1:**
+<img alt="" src="https://assets.leetcode.com/uploads/2021/02/18/example1_1.png" style="width: 500px; height: 234px;">
+
+```
+Input: grid = [[0,1],[1,0]]
+Output: 2
+```
+
+**Example 2:**
+<img alt="" src="https://assets.leetcode.com/uploads/2021/02/18/example2_1.png" style="height: 216px; width: 500px;">
+
+```
+Input: grid = [[0,0,0],[1,1,0],[1,1,0]]
+Output: 4
+```
+
+**Example 3:**
+
+```
+Input: grid = [[1,0,0],[1,1,0],[1,1,0]]
+Output: -1
+```
+
+**Constraints:**
+
+- <code>n == grid.length</code>
+- <code>n == grid[i].length</code>
+- <code>1 <= n <= 100</code>
+- <code>grid[i][j] is 0 or 1</code>
+
+## Approach
+
+- Pattern: Shortest Path
+- No need for pq since weights are of unit weight normal queue bfs will work
+
+## Code
+
+```cpp
+/*
+    Can use normal queue in this since the weights are unit
+*/
+class Solution {
+public:
+    int shortestPathBinaryMatrix(vector<vector<int>>& grid) {
+        if(grid[0][0] != 0) return -1; // if initial is not 0 then cant reach end
+
+        int n = grid.size();
+
+        queue<pair<int, pair<int, int>>> q; // stores distance taken till this vs (row, col)
+
+        vector<vector<int>> distance(n, vector<int>(n, INT_MAX));
+
+        q.push({1, {0, 0}}); // distance to reach {0,0} is 1
+        distance[0][0] = 1;
+
+        vector<pair<int, int>> directions = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}, {1, 1}, {-1, -1}, {1, -1}, {-1, 1}}; // can go in eight directions
+
+        while(!q.empty()){
+            auto config = q.front();
+            q.pop();
+
+            int distanceTillHere = config.first;
+            int row = config.second.first;
+            int col = config.second.second;
+
+            if(row == n - 1 && col == n - 1){
+                return distanceTillHere; // the first occurence of this in bfs will be the shortest only
+            }
+
+            for(auto& [dy, dx]: directions){
+                int newRow = row + dy;
+                int newCol = col + dx;
+
+                // agar valid config h and this is a shorter path
+                if(newRow < n && newRow >= 0 && newCol < n && newCol >= 0 && grid[newRow][newCol] == 0 && distanceTillHere + 1 < distance[newRow][newCol]){
+                    distance[newRow][newCol] = distanceTillHere + 1;
+                    q.push({distanceTillHere + 1, {newRow, newCol}});
+                }
+            }
+        }
+
+        return -1;
+    }
+};
+```
+
+# [1631. Path With Minimum Effort](https://leetcode.com/problems/path-with-minimum-effort/description/)
+
+You are a hiker preparing for an upcoming hike. You are given <code>heights</code>, a 2D array of size <code>rows x columns</code>, where <code>heights[row][col]</code> represents the height of cell <code>(row, col)</code>. You are situated in the top-left cell, <code>(0, 0)</code>, and you hope to travel to the bottom-right cell, <code>(rows-1, columns-1)</code> (i.e.,**0-indexed** ). You can move **up** , **down** , **left** , or **right** , and you wish to find a route that requires the minimum **effort** .
+
+A route's **effort** is the **maximum absolute difference** \*\* \*\* in heights between two consecutive cells of the route.
+
+Return the minimum **effort** required to travel from the top-left cell to the bottom-right cell.
+
+**Example 1:**
+
+<img alt="" src="https://assets.leetcode.com/uploads/2020/10/04/ex1.png" style="width: 300px; height: 300px;">
+
+```
+Input: heights = [[1,2,2],[3,8,2],[5,3,5]]
+Output: 2
+Explanation: The route of [1,3,5,3,5] has a maximum absolute difference of 2 in consecutive cells.
+This is better than the route of [1,2,2,2,5], where the maximum absolute difference is 3.
+```
+
+**Example 2:**
+
+<img alt="" src="https://assets.leetcode.com/uploads/2020/10/04/ex2.png" style="width: 300px; height: 300px;">
+
+```
+Input: heights = [[1,2,3],[3,8,4],[5,3,5]]
+Output: 1
+Explanation: The route of [1,2,3,4,5] has a maximum absolute difference of 1 in consecutive cells, which is better than route [1,3,5,3,5].
+```
+
+**Example 3:**
+<img alt="" src="https://assets.leetcode.com/uploads/2020/10/04/ex3.png" style="width: 300px; height: 300px;">
+
+```
+Input: heights = [[1,2,1,1,1],[1,2,1,2,1],[1,2,1,2,1],[1,2,1,2,1],[1,1,1,2,1]]
+Output: 0
+Explanation: This route does not require any effort.
+```
+
+**Constraints:**
+
+- <code>rows == heights.length</code>
+- <code>columns == heights[i].length</code>
+- <code>1 <= rows, columns <= 100</code>
+- <code>1 <= heights[i][j] <= 10^6</code>
+
+## Approach
+
+- Pattern: Application of Dijkstra for shortest path
+- T.C => O(N _ M _ log(N\*M))
+- S.C => O(N \* M)
+
+## Code
+
+```cpp
+#define P pair<int, pair<int, int>>
+
+class Solution {
+public:
+    int minimumEffortPath(vector<vector<int>>& heights) {
+        int rows = heights.size();
+        int cols = heights[0].size();
+
+        priority_queue<P, vector<P>, greater<P>> pq; // min heap stores distance vs {row, col}
+
+        vector<vector<int>> distance(rows, vector<int>(cols, INT_MAX));
+        distance[0][0] = 0;
+        pq.push({0, {0, 0}});
+
+        vector<pair<int, int>> directions = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+
+        while(!pq.empty()){
+            auto config = pq.top();
+            pq.pop();
+
+            int minEffortTillHere = config.first;
+            int row = config.second.first;
+            int col = config.second.second;
+
+            if(row == rows - 1 && col == cols - 1){
+                return minEffortTillHere;
+            }
+
+            for(auto& [dy, dx]: directions){
+                int newRow = row + dy;
+                int newCol = col + dx;
+
+                // store maximum of effort till here or if new can be more than that
+                int newEffort = max(abs(heights[row][col] - heights[newRow][newCol]), minEffortTillHere);
+
+                if(newRow < rows && newRow >= 0 && newCol < cols && newCol >= 0 && newEffort < distance[newRow][newCol]){
+                    distance[newRow][newCol] = newEffort;
+                    pq.push({distance[newRow][newCol], {newRow, newCol}});
+                }
+            }
+        }
+
+        return -1;
+    }
+};
+```
+
+# [787. Cheapest Flights Within K Stops](https://leetcode.com/problems/cheapest-flights-within-k-stops/description/?source=submission-noac)
+
+There are <code>n</code> cities connected by some number of flights. You are given an array <code>flights</code> where <code>flights[i] = [from<sub>i</sub>, to<sub>i</sub>, price<sub>i</sub>]</code> indicates that there is a flight from city <code>from<sub>i</sub></code> to city <code>to<sub>i</sub></code> with cost <code>price<sub>i</sub></code>.
+
+You are also given three integers <code>src</code>, <code>dst</code>, and <code>k</code>, return **the cheapest price** from <code>src</code> to <code>dst</code> with at most <code>k</code> stops. If there is no such route, return <code>-1</code>.
+
+**Example 1:**
+<img alt="" src="https://assets.leetcode.com/uploads/2022/03/18/cheapest-flights-within-k-stops-3drawio.png" style="width: 332px; height: 392px;">
+
+```
+Input: n = 4, flights = [[0,1,100],[1,2,100],[2,0,100],[1,3,600],[2,3,200]], src = 0, dst = 3, k = 1
+Output: 700
+Explanation:
+The graph is shown above.
+The optimal path with at most 1 stop from city 0 to 3 is marked in red and has cost 100 + 600 = 700.
+Note that the path through cities [0,1,2,3] is cheaper but is invalid because it uses 2 stops.
+```
+
+**Example 2:**
+<img alt="" src="https://assets.leetcode.com/uploads/2022/03/18/cheapest-flights-within-k-stops-1drawio.png" style="width: 332px; height: 242px;">
+
+```
+Input: n = 3, flights = [[0,1,100],[1,2,100],[0,2,500]], src = 0, dst = 2, k = 1
+Output: 200
+Explanation:
+The graph is shown above.
+The optimal path with at most 1 stop from city 0 to 2 is marked in red and has cost 100 + 100 = 200.
+```
+
+**Example 3:**
+<img alt="" src="https://assets.leetcode.com/uploads/2022/03/18/cheapest-flights-within-k-stops-2drawio.png" style="width: 332px; height: 242px;">
+
+```
+Input: n = 3, flights = [[0,1,100],[1,2,100],[0,2,500]], src = 0, dst = 2, k = 0
+Output: 500
+Explanation:
+The graph is shown above.
+The optimal path with no stops from city 0 to 2 is marked in red and has cost 500.
+```
+
+**Constraints:**
+
+- <code>1 <= n <= 100</code>
+- <code>0 <= flights.length <= (n \* (n - 1) / 2)</code>
+- <code>flights[i].length == 3</code>
+- <code>0 <= from<sub>i</sub>, to<sub>i</sub> < n</code>
+- <code>from<sub>i</sub> != to<sub>i</sub></code>
+- <code>1 <= price<sub>i</sub> <= 10^4</code>
+- There will not be any multiple flights between two cities.
+- <code>0 <= src, dst, k < n</code>
+- <code>src != dst</code>
+
+## Approach
+
+- Pattern: Dijkstra
+- T.C => O(V + E) \* logV
+
+## Code
+
+```cpp
+// if we just work on the basis of cost then there can be paths such that which may be cheaper in cost but the total steps may be larger to reach there
+// so basically always work on the path with the lowest steps and if a new path is possible from this which has lowerCost and is within our limits then use it
+#define pii pair<int, pair<int, int>>
+class Solution {
+public:
+    int findCheapestPrice(int n, vector<vector<int>>& flights, int src, int dst, int k) {
+        vector<vector<pair<int, int>>> adjList(n);
+        for(auto& edge: flights){
+            int u = edge[0];
+            int v = edge[1];
+            int wt = edge[2];
+            adjList[u].push_back({v, wt});
+        }
+
+        vector<int> minCost(n, INT_MAX);
+        priority_queue<pii, vector<pii>, greater<pii>> pq; // stops vs (node, cost)
+
+        minCost[src] = 0;
+        pq.push({0, {src, 0}});
+
+        while(!pq.empty()){
+            auto config = pq.top();
+            pq.pop();
+
+            int stops = config.first;
+            int node = config.second.first;
+            int cost = config.second.second;
+
+            if(stops > k) continue; // skip this path say k was 2 then when it is processed finally we added it as 3 stops so can discard this now. Also min cost will be updated before so it works
+
+            for(auto it: adjList[node]){
+                int adjacentNode = it.first;
+                int edgeWeight = it.second;
+
+                if(cost + edgeWeight < minCost[adjacentNode] && stops <= k){
+                    minCost[adjacentNode] = cost + edgeWeight;
+                    pq.push({stops + 1, {adjacentNode, minCost[adjacentNode]}});
+                }
+            }
+        }
+
+        return minCost[dst] != INT_MAX ? minCost[dst] : -1;
     }
 };
 ```
