@@ -77,6 +77,12 @@
 - [787. Cheapest Flights Within K Stops](#787-cheapest-flights-within-k-stops)
   - [Approach](#approach-21)
   - [Code](#code-23)
+- [Minimum Multiplications to reach end](#minimum-multiplications-to-reach-end)
+  - [Approach](#approach-22)
+  - [Code](#code-24)
+- [1976. Number of Ways to Arrive at Destination](#1976-number-of-ways-to-arrive-at-destination)
+  - [Approach](#approach-23)
+  - [Code](#code-25)
 
 # [323. Number of Connected Components in an Undirected Graph](https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/description/)
 
@@ -2328,6 +2334,155 @@ public:
         }
 
         return minCost[dst] != INT_MAX ? minCost[dst] : -1;
+    }
+};
+```
+
+# [Minimum Multiplications to reach end](https://www.geeksforgeeks.org/problems/minimum-multiplications-to-reach-end/0)
+
+![alt text](images/image-6.png)
+
+## Approach
+
+- Pattern: Shortest path application
+- T.C => O(100000 \* N ( length of array )) ( this is the max queue operations that can be done )
+- S.C => O(100000 \* N)
+
+## Code
+
+```cpp
+class Solution {
+  public:
+    int minimumMultiplications(vector<int>& arr, int start, int end) {
+        if(start == end) return 0;
+        int mod = 1e5;
+        queue<pair<int, int>> q;
+        vector<int> minSteps(mod, INT_MAX);
+
+        minSteps[start] = 0;
+        q.push({start, 0}); // node vs steps taken
+
+        while(!q.empty()){
+            int node = q.front().first;
+            int stepsTillThisNode = q.front().second;
+            q.pop();
+
+            if(node == end) return stepsTillThisNode;
+
+            for(int i = 0; i < arr.size(); i++){
+                int newNode = (arr[i] * node) % mod;
+
+                // think of it like a graph with unit weight
+                // similar to finding shortest path in undirected graph with unit weigtht edges
+                if(stepsTillThisNode + 1 < minSteps[newNode]) {
+                    minSteps[newNode] = stepsTillThisNode + 1;
+                    q.push({newNode, stepsTillThisNode + 1});
+                }
+            }
+        }
+
+        return -1;
+    }
+};
+```
+
+# [1976. Number of Ways to Arrive at Destination](https://leetcode.com/problems/number-of-ways-to-arrive-at-destination/description/)
+
+You are in a city that consists of <code>n</code> intersections numbered from <code>0</code> to <code>n - 1</code> with **bi-directional** roads between some intersections. The inputs are generated such that you can reach any intersection from any other intersection and that there is at most one road between any two intersections.
+
+You are given an integer <code>n</code> and a 2D integer array <code>roads</code> where <code>roads[i] = [u<sub>i</sub>, v<sub>i</sub>, time<sub>i</sub>]</code> means that there is a road between intersections <code>u<sub>i</sub></code> and <code>v<sub>i</sub></code> that takes <code>time<sub>i</sub></code> minutes to travel. You want to know in how many ways you can travel from intersection <code>0</code> to intersection <code>n - 1</code> in the **shortest amount of time** .
+
+Return the **number of ways** you can arrive at your destination in the **shortest amount of time** . Since the answer may be large, return it **modulo** <code>10^9 + 7</code>.
+
+**Example 1:**
+<img alt="" src="https://assets.leetcode.com/uploads/2025/02/14/1976_corrected.png" style="width: 255px; height: 400px;">
+
+```
+Input: n = 7, roads = [[0,6,7],[0,1,2],[1,2,3],[1,3,3],[6,3,3],[3,5,1],[6,5,1],[2,5,1],[0,4,5],[4,6,2]]
+Output: 4
+Explanation: The shortest amount of time it takes to go from intersection 0 to intersection 6 is 7 minutes.
+The four ways to get there in 7 minutes are:
+- 0 ➝ 6
+- 0 ➝ 4 ➝ 6
+- 0 ➝ 1 ➝ 2 ➝ 5 ➝ 6
+- 0 ➝ 1 ➝ 3 ➝ 5 ➝ 6
+```
+
+**Example 2:**
+
+```
+Input: n = 2, roads = [[1,0,10]]
+Output: 1
+Explanation: There is only one way to go from intersection 0 to intersection 1, and it takes 10 minutes.
+```
+
+**Constraints:**
+
+- <code>1 <= n <= 200</code>
+- <code>n - 1 <= roads.length <= n \* (n - 1) / 2</code>
+- <code>roads[i].length == 3</code>
+- <code>0 <= u<sub>i</sub>, v<sub>i</sub> <= n - 1</code>
+- <code>1 <= time<sub>i</sub> <= 10^9</code>
+- <code>u<sub>i </sub>!= v<sub>i</sub></code>
+- There is at most one road connecting any two intersections.
+- You can reach any intersection from any other intersection.
+
+## Approach
+
+- Pattern: Dijkstra
+- Leetcode has way to difficult constraints
+
+## Code
+
+```cpp
+#define PII pair<int, int>
+#define PLI pair<long long, int>
+class Solution {
+public:
+    int countPaths(int n, vector<vector<int>>& roads) {
+        vector<vector<PII>> adjList(n);
+        vector<long long> distance(n, LLONG_MAX); // constraints for question are out of bounds
+        vector<int> ways(n, 0); // stores number of times we reach this node in
+        // case of shortest path passes through this node
+        priority_queue<PLI, vector<PLI>, greater<PLI>> pq;
+        int mod = 1e9 + 7;
+
+        for(auto& road: roads){
+            int u = road[0];
+            int v = road[1];
+            int wt = road[2];
+
+            adjList[u].push_back({v, wt});
+            adjList[v].push_back({u, wt});
+        }
+
+        distance[0] = 0;
+        ways[0] = 1; // only 1 way possible for source node
+        pq.push({0, 0}); // distance vs node
+
+        while(!pq.empty()){
+            long long distanceTillHere = pq.top().first;
+            int node = pq.top().second;
+            pq.pop();
+
+            for(auto it: adjList[node]){
+                int adjNode = it.first;
+                int edgeWeight = it.second;
+
+                if(distanceTillHere + edgeWeight < distance[adjNode]){
+                    distance[adjNode] = distanceTillHere + edgeWeight;
+                    pq.push({distance[adjNode], adjNode});
+                    // initially this will be the number of ways or whenever we find the shortest path
+                    ways[adjNode] = ways[node];
+                }
+                // already discovered shortest distance before just add to existing wasy
+                else if(distanceTillHere + edgeWeight == distance[adjNode]){
+                    ways[adjNode] = (ways[adjNode] % mod) + (ways[node] % mod); // prevent overflow ( a + b ) % mod = a % mod + b % mod
+                }
+            }
+        }
+
+        return ways[n - 1] % mod;
     }
 };
 ```
