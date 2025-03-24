@@ -85,6 +85,11 @@
   - [Code](#code-25)
 - [Bellman Ford](#bellman-ford)
   - [Code](#code-26)
+- [Floyd Warshall](#floyd-warshall)
+  - [Code](#code-27)
+- [1334. Find the City With the Smallest Number of Neighbors at a Threshold Distance](#1334-find-the-city-with-the-smallest-number-of-neighbors-at-a-threshold-distance)
+  - [Approach](#approach-24)
+  - [Code](#code-28)
 
 # [323. Number of Connected Components in an Undirected Graph](https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/description/)
 
@@ -2536,6 +2541,144 @@ class Solution {
         }
 
         return distance;
+    }
+};
+```
+
+# [Floyd Warshall](https://www.geeksforgeeks.org/problems/implementing-floyd-warshall2042/1)
+
+- The problem is to find the shortest distances between for every vertex to every vertex in a grid.
+- Very brute force approach basically calculate for each node then min cost it is going to take if for every i, j pair we try going through this node.
+  - Checking what is min going from i -> j directly or going from i -> via -> j.
+- O(N^3) only valid in case N < 100.
+
+## Code
+
+```cpp
+void shortestDistance(vector<vector<int>>& mat) {
+        int n = mat.size();
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < n; j++){
+                if(mat[i][j] == -1) mat[i][j] = INT_MAX;
+            }
+        }
+        // mat[i][j] => cost from going from i to j ( adj matrix representation )
+        for(int via = 0; via < n; via++){
+            for(int i = 0; i < n; i++){
+                for(int j = 0; j < n; j++){
+                    if(dist[i][via] == INT_MAX || dist[via][j] == INT_MAX) continue; // no need to check for this
+                    // try checking whether it is beneficial to go
+                    // from i to j directly or go from i -> via -> j
+                    mat[i][j] = min(mat[i][j], mat[i][via] + mat[via][j]);
+                }
+            }
+        }
+
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < n; j++){
+                if(mat[i][j] == INT_MAX) mat[i][j] = -1;
+            }
+        }
+    }
+```
+
+# [1334. Find the City With the Smallest Number of Neighbors at a Threshold Distance](https://leetcode.com/problems/find-the-city-with-the-smallest-number-of-neighbors-at-a-threshold-distance/description/)
+
+There are <code>n</code> cities numbered from <code>0</code> to <code>n-1</code>. Given the array <code>edges</code> where <code>edges[i] = [from<sub>i</sub>, to<sub>i</sub>, weight<sub>i</sub>]</code> represents a bidirectional and weighted edge between cities <code>from<sub>i</sub></code> and <code>to<sub>i</sub></code>, and given the integer <code>distanceThreshold</code>.
+
+Return the city with the smallest number of cities that are reachable through some path and whose distance is **at most** <code>distanceThreshold</code>, If there are multiple such cities, return the city with the greatest number.
+
+Notice that the distance of a path connecting cities **i** and **j** is equal to the sum of the edges' weights along that path.
+
+**Example 1:**
+
+<img alt="" src="https://assets.leetcode.com/uploads/2024/08/23/problem1334example1.png" style="width: 300px; height: 224px;">
+
+```
+Input: n = 4, edges = [[0,1,3],[1,2,1],[1,3,4],[2,3,1]], distanceThreshold = 4
+Output: 3
+Explanation: The figure above describes the graph.
+The neighboring cities at a distanceThreshold = 4 for each city are:
+City 0 -> [City 1, City 2]
+City 1 -> [City 0, City 2, City 3]
+City 2 -> [City 0, City 1, City 3]
+City 3 -> [City 1, City 2]
+Cities 0 and 3 have 2 neighboring cities at a distanceThreshold = 4, but we have to return city 3 since it has the greatest number.
+```
+
+**Example 2:**
+
+<img alt="" src="https://assets.leetcode.com/uploads/2024/08/23/problem1334example0.png" style="width: 300px; height: 224px;">
+
+```
+Input: n = 5, edges = [[0,1,2],[0,4,8],[1,2,3],[1,4,2],[2,3,1],[3,4,1]], distanceThreshold = 2
+Output: 0
+Explanation: The figure above describes the graph.
+The neighboring cities at a distanceThreshold = 2 for each city are:
+City 0 -> [City 1]
+City 1 -> [City 0, City 4]
+City 2 -> [City 3, City 4]
+City 3 -> [City 2, City 4]
+City 4 -> [City 1, City 2, City 3]
+The city 0 has 1 neighboring city at a distanceThreshold = 2.
+```
+
+**Constraints:**
+
+- <code>2 <= n <= 100</code>
+- <code>1 <= edges.length <= n \* (n - 1) / 2</code>
+- <code>edges[i].length == 3</code>
+- <code>0 <= from<sub>i</sub> < to<sub>i</sub> < n</code>
+- <code>1 <= weight<sub>i</sub>,distanceThreshold <= 10^4</code>
+- All pairs <code>(from<sub>i</sub>, to<sub>i</sub>)</code> are distinct.
+
+## Approach
+
+- Pattern: Floyd warshall application
+- T.C: O(N^3) from floyd warshall
+
+## Code
+
+```cpp
+class Solution {
+public:
+    int findTheCity(int n, vector<vector<int>>& edges, int distanceThreshold) {
+        vector<vector<int>> distance(n, vector<int>(n, INT_MAX));
+        int maxCityCount = n;
+        int cityNumber = -1;
+
+        for(auto& edge: edges){
+            distance[edge[0]][edge[1]] = edge[2];
+            distance[edge[1]][edge[0]] = edge[2]; // undirected graph
+        }
+
+        for(int i = 0; i < n; i++) distance[i][i] = 0; // distance from i -> i
+
+        // floyd warshall algorithm
+        for(int k = 0; k < n; k++){
+            for(int i = 0; i < n; i++){
+                for(int j = 0; j < n; j++){
+                    if(distance[i][k] == INT_MAX || distance[k][j] == INT_MAX) continue;
+                    distance[i][j] = min(distance[i][j], distance[i][k] + distance[k][j]);
+                }
+            }
+        }
+
+        // har city ke adjacent cities ka count if they are less then distance threshold
+        // also need to return the larger city number so will check till last
+        for(int city = 0; city < n; city++){
+            int cityCount = 0;
+            for(int adjCity = 0; adjCity < n; adjCity++){
+                if(distance[city][adjCity] <= distanceThreshold) cityCount++;
+            }
+            // if found any city which is less than max amount of cities found till now then that is answer
+            if(cityCount <= maxCityCount){
+                maxCityCount = cityCount;
+                cityNumber = city;
+            }
+        }
+
+        return cityNumber;
     }
 };
 ```
