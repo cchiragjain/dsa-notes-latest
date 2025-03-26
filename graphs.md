@@ -90,6 +90,12 @@
 - [1334. Find the City With the Smallest Number of Neighbors at a Threshold Distance](#1334-find-the-city-with-the-smallest-number-of-neighbors-at-a-threshold-distance)
   - [Approach](#approach-24)
   - [Code](#code-28)
+- [Spanning Tree and MST](#spanning-tree-and-mst)
+  - [Spanning Tree](#spanning-tree)
+  - [MST](#mst)
+- [Disjoint Set Union(DSU)](#disjoint-set-uniondsu)
+  - [Code](#code-29)
+    - [Using Rank, Size \& Path Compression](#using-rank-size--path-compression)
 
 # [323. Number of Connected Components in an Undirected Graph](https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/description/)
 
@@ -2681,4 +2687,108 @@ public:
         return cityNumber;
     }
 };
+```
+
+# Spanning Tree and MST
+
+## Spanning Tree
+
+- Only for a weighted undirected graph. In a directed graph we cant be sure that all the nodes can be reached.
+- Any sub graph of a graph that has n nodes and n - 1 edges and from each node we can reach the other nodes then it is a spanning tree of the graph.
+- for the given graph
+  ![alt text](images/image-8.png)
+
+- The below can be spanning trees
+  ![alt text](images/image-9.png)
+  ![alt text](images/image-10.png)
+
+## MST
+
+- Out of all the spanning trees the tree with the minimum path weight sum will be the mst.
+- ![alt text](images/image-11.png)
+- there can be multiple spanning trees as well.
+
+# Disjoint Set Union(DSU)
+
+- A disjoint set is basically a data structure that helps us in finding if two things belong to the same set/ component or not.
+- Mostly used in dynamic graphs ( the edges keep on changing/ or in between graph formation we need to know if two belong to the same component or not )
+
+## Code
+
+### Using Rank, Size & Path Compression
+
+- We maintain 2 arrays in this one is a parent array and other is a rank array( means height initially 0 but if 2 gets connected to 0 then 2's rank will be 1) ( 2 is parent of 0 ). Can also be thought of as the height of the subtree but when path compression ( see below ) is done rank is not changed so think of it as rank only.
+- Algo for Rank
+  - Find ultimate parent of u & v
+  - If ranks are same then u -> v and v -> u.
+  - Otherwise always connect lower rank one to higher rank and increase higher elements rank by 1 and also change parent of lower rank.
+  - Find pu and pv. Then find rpu and rpv
+- Path compression: Nothing just finding ultimate parent once and then assigning it in parent array. Our logic works on rank. So next call to find will not be more than 1.
+- Algo for size
+  - Same as rank but now store the size of tree. And attach shorter tree size to larger tree and give smaller tree size to larger tree.
+
+```cpp
+class DisjointSet {
+vector<int> rank;
+vector<int> parent;
+vector<int> size;
+
+private:
+    int findUltimateParent(int node){
+        if(node == parent[node]) return node;
+
+        parent[node] = findUltimateParent(parent[node]); // apna ultimate parent
+        // dhund ke laa aur in return assign it as well to do path compresssion
+        return parent[node];
+    }
+
+public:
+    DisjointSet(int n) {
+        rank.resize(n + 1, 0); // ranks are 0 by default
+        parent.resize(n + 1);
+        size.resize(n + 1, 1); // size are 1 by default
+
+        for(int i = 0; i <= n; i++){
+            parent[i] = i; // each one is there own parent initially
+        }
+    }
+
+    bool find(int u, int v) {
+        return findUltimateParent(u) == findUltimateParent(v);
+    }
+
+    void unionByRank(int u, int v) {
+        int upu = findUltimateParent(u);
+        int upv = findUltimateParent(v);
+
+        // always attach smaller rank parent to bigger rank parent
+        if(rank[upu] < rank[upv]){
+            parent[upu] = upv; // choti rank ka parent update kardia
+            // no need to update rank in this case since rank already badi hogi bade vaale ki
+            // ex. 1 - 2 and 3 - 4 - 5 - 6 if we do union (1, 3) then rank of 1 is 1 and of 3 is 3
+            // if we end up attaching rank will remain same of new parent 3
+        } else if(rank[upu] > rank[upv]){
+            parent[upv] = upu;
+        } else {
+            // can do any way
+            parent[upv] = upu; // v ka parent u
+            // icrease rank of u
+            rank[upu]++;
+        }
+    }
+
+    void unionBySize(int u, int v) {
+        int upu = findUltimateParent(u);
+        int upv = findUltimateParent(v);
+
+        if(size[upu] < size[upv]){
+            parent[upu] = upv;
+            size[upv] += size[upu];
+        } else if(size[upv] <= size[upu]){ // increasing size in both
+        // so no need to have separete equal case
+            parent[upv] = upu;
+            size[upu] += size[upv];
+        }
+    }
+}
 ```

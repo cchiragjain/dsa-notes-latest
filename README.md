@@ -1,3 +1,3 @@
-# Index
+# Notes List
 
 - [Graphs](./graphs.md)
