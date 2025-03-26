@@ -90,12 +90,20 @@
 - [1334. Find the City With the Smallest Number of Neighbors at a Threshold Distance](#1334-find-the-city-with-the-smallest-number-of-neighbors-at-a-threshold-distance)
   - [Approach](#approach-24)
   - [Code](#code-28)
-- [Spanning Tree and MST](#spanning-tree-and-mst)
-  - [Spanning Tree](#spanning-tree)
-  - [MST](#mst)
 - [Disjoint Set Union(DSU)](#disjoint-set-uniondsu)
   - [Code](#code-29)
     - [Using Rank, Size \& Path Compression](#using-rank-size--path-compression)
+- [Find Minimum Spanning Tree Weight](#find-minimum-spanning-tree-weight)
+  - [Spanning Tree](#spanning-tree)
+  - [MST](#mst)
+  - [Using Prims Algorithm](#using-prims-algorithm)
+  - [Using kruskals](#using-kruskals)
+- [1319. Number of Operations to Make Network Connected](#1319-number-of-operations-to-make-network-connected)
+  - [Approach](#approach-25)
+  - [Code](#code-30)
+- [721. Accounts Merge](#721-accounts-merge)
+  - [Approach](#approach-26)
+  - [Code](#code-31)
 
 # [323. Number of Connected Components in an Undirected Graph](https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/description/)
 
@@ -2689,25 +2697,6 @@ public:
 };
 ```
 
-# Spanning Tree and MST
-
-## Spanning Tree
-
-- Only for a weighted undirected graph. In a directed graph we cant be sure that all the nodes can be reached.
-- Any sub graph of a graph that has n nodes and n - 1 edges and from each node we can reach the other nodes then it is a spanning tree of the graph.
-- for the given graph
-  ![alt text](images/image-8.png)
-
-- The below can be spanning trees
-  ![alt text](images/image-9.png)
-  ![alt text](images/image-10.png)
-
-## MST
-
-- Out of all the spanning trees the tree with the minimum path weight sum will be the mst.
-- ![alt text](images/image-11.png)
-- there can be multiple spanning trees as well.
-
 # Disjoint Set Union(DSU)
 
 - A disjoint set is basically a data structure that helps us in finding if two things belong to the same set/ component or not.
@@ -2791,4 +2780,351 @@ public:
         }
     }
 }
+```
+
+# [Find Minimum Spanning Tree Weight](https://www.geeksforgeeks.org/problems/minimum-spanning-tree/1)
+
+## Spanning Tree
+
+- Only for a weighted undirected graph. In a directed graph we cant be sure that all the nodes can be reached.
+- Any sub graph of a graph that has n nodes and n - 1 edges and from each node we can reach the other nodes then it is a spanning tree of the graph.
+- for the given graph
+  ![alt text](images/image-8.png)
+
+- The below can be spanning trees
+  ![alt text](images/image-9.png)
+  ![alt text](images/image-10.png)
+
+## MST
+
+- Out of all the spanning trees the tree with the minimum path weight sum will be the mst.
+- ![alt text](images/image-11.png)
+- there can be multiple spanning trees as well.
+
+- Q. Find sum of the edge weights of the mst in graph.
+
+## Using Prims Algorithm
+
+- Greedily keep on expanding mst by adding the edge with most minimum weight.
+- T.C => O(E log E) ( will run for edges time )
+
+```cpp
+#define P pair<int, pair<int,int>>
+class Solution {
+  public:
+    // Function to find sum of weights of edges of the Minimum Spanning Tree.
+    int spanningTree(int V, vector<vector<int>> adj[]) {
+        priority_queue<P, vector<P>, greater<P>> pq; // define min heap
+        // stores {wt, node, parent}
+
+        vector<pair<int, int>> mst; // stores edges used by the mst
+        vector<bool> visited(V, false);
+        pq.push({0, {0, -1}}); // if parent is -1 then not part of mst
+
+        int sum = 0;
+
+        while(!pq.empty()){
+            auto it = pq.top();
+            pq.pop();
+
+            int wt = it.first;
+            int node = it.second.first;
+            int parent = it.second.second;
+
+            if(visited[node]) continue; // if node is already visited then already part of our mst
+
+            // add this minimum weight to our mst and mark this node as visited now
+            sum += wt;
+            visited[node] = true;
+            // if not initial node then can add this edge to our mst
+            if(parent != -1)
+                mst.push_back({parent, node}); // not required for this question but can be used
+
+            // add other adjacent nodes to pq if not visited
+            for(auto& edge: adj[node]){
+                int neighbour = edge[0];
+                int edgeWeight = edge[1];
+                if(!visited[neighbour]){
+                    pq.push({edgeWeight, {neighbour, node}});
+                }
+            }
+        }
+
+        return sum;
+    }
+};
+```
+
+## Using kruskals
+
+- We basically have to get a sorted list of edges sorted by weight. (wt, u, v)
+- Now if when traversing over the edges we add this wt to our mst if they dont belong to the same component already using disjoint sets and if they belong we ignore.
+- If already sorted is good since can be done in O(E) time but if not sorted then can be done in O(E log E)
+
+```cpp
+int mst = 0;
+// edges is vector of {wt, {u, v}} sorted by wt
+// using sort(edges.begin(), edges.end())
+for(auto edge: edges){
+    int wt = edge.first;
+    int u = edge.second.first;
+    int v = edge.second.second;
+
+    // if not part of the same can add to our mst
+    if(!ds.isConnected(u,v)){
+        mst += wt;
+        ds.union(u,v);
+    }
+}
+return mst;
+```
+
+# [1319. Number of Operations to Make Network Connected](https://leetcode.com/problems/number-of-operations-to-make-network-connected/description/)
+
+There are <code>n</code> computers numbered from <code>0</code> to <code>n - 1</code> connected by ethernet cables <code>connections</code> forming a network where <code>connections[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> represents a connection between computers <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code>. Any computer can reach any other computer directly or indirectly through the network.
+
+You are given an initial computer network <code>connections</code>. You can extract certain cables between two directly connected computers, and place them between any pair of disconnected computers to make them directly connected.
+
+Return the minimum number of times you need to do this in order to make all the computers connected. If it is not possible, return <code>-1</code>.
+
+**Example 1:**
+<img alt="" src="https://assets.leetcode.com/uploads/2020/01/02/sample_1_1677.png" style="width: 500px; height: 148px;">
+
+```
+Input: n = 4, connections = [[0,1],[0,2],[1,2]]
+Output: 1
+Explanation: Remove cable between computer 1 and 2 and place between computers 1 and 3.
+```
+
+**Example 2:**
+<img alt="" src="https://assets.leetcode.com/uploads/2020/01/02/sample_2_1677.png" style="width: 500px; height: 129px;">
+
+```
+Input: n = 6, connections = [[0,1],[0,2],[0,3],[1,2],[1,3]]
+Output: 2
+```
+
+**Example 3:**
+
+```
+Input: n = 6, connections = [[0,1],[0,2],[0,3],[1,2]]
+Output: -1
+Explanation: There are not enough cables.
+```
+
+**Constraints:**
+
+- <code>1 <= n <= 10^5</code>
+- <code>1 <= connections.length <= min(n \* (n - 1) / 2, 10^5)</code>
+- <code>connections[i].length == 2</code>
+- <code>0 <= a<sub>i</sub>, b<sub>i</sub> < n</code>
+- <code>a<sub>i</sub> != b<sub>i</sub></code>
+- There are no repeated connections.
+- No two computers are connected by more than one cable.
+
+## Approach
+
+- Pattern: Disjont set/ dfs with number of components
+- MST
+
+## Code
+
+```cpp
+/*
+    * The minimum way a graph/ can be fully connected is through a spanning tree ( n nodes h aur n - 1 edges )
+    * Matlab n computers ko atleast n - 1 wires chaiye ( if this is not the case then -1 not possible )
+    *
+*/
+class DisjointSet{
+public:
+    vector<int> parent;
+    // vector<unsigned long long> size; // doing by size is way outside contraints
+    vector<int> rank;
+
+    DisjointSet(int n){
+        parent.resize(n + 1);
+        rank.resize(n + 1, 0);
+        // size.resize(n + 1, 1);
+        for(int i = 0; i <= n; i++){
+            parent[i] = i;
+        }
+    }
+
+    int findUltimateParent(int node){
+        if(parent[node] == node) return node;
+        parent[node] = findUltimateParent(parent[node]);
+        return parent[node];
+    }
+
+    void unionByRank(int u, int v){
+        int upu = findUltimateParent(u);
+        int upv = findUltimateParent(v);
+
+        // always connect smaller rank to bigger one
+        if(rank[upu] < rank[upv]){
+            parent[upu] = upv;
+        } else if(rank[upv] < rank[upu]){
+            parent[upv] = upu;
+        } else{
+            parent[upu] = upv;
+            rank[upv]++;
+        }
+    }
+};
+
+class Solution {
+public:
+    int makeConnected(int n, vector<vector<int>>& connections) {
+        int wires = connections.size();
+        if(wires < n - 1) return -1; // if we dont have atleast n - 1 wires then not possible
+
+        // using disjoint set to find number of componets
+        // according to spanning tree we need atleast n - 1 edges to make n nodes completely connected
+
+        DisjointSet ds(n);
+        int numberOfComponents = 0;
+
+        for(auto connection: connections){
+            int u = connection[0];
+            int v = connection[1];
+            ds.unionByRank(u, v);
+        }
+
+        for(int i = 0; i < n; i++) {
+            // if any node is there own parent then they form a component
+            if(ds.parent[i] == i) numberOfComponents++;
+        }
+
+        return numberOfComponents - 1;
+    }
+};
+```
+
+# [721. Accounts Merge](https://leetcode.com/problems/accounts-merge/description/)
+
+Given a list of <code>accounts</code> where each element <code>accounts[i]</code> is a list of strings, where the first element <code>accounts[i][0]</code> is a name, and the rest of the elements are **emails** representing emails of the account.
+
+Now, we would like to merge these accounts. Two accounts definitely belong to the same person if there is some common email to both accounts. Note that even if two accounts have the same name, they may belong to different people as people could have the same name. A person can have any number of accounts initially, but all of their accounts definitely have the same name.
+
+After merging the accounts, return the accounts in the following format: the first element of each account is the name, and the rest of the elements are emails **in sorted order** . The accounts themselves can be returned in **any order** .
+
+**Example 1:**
+
+```
+Input: accounts = [["John","johnsmith@mail.com","john_newyork@mail.com"],["John","johnsmith@mail.com","john00@mail.com"],["Mary","mary@mail.com"],["John","johnnybravo@mail.com"]]
+Output: [["John","john00@mail.com","john_newyork@mail.com","johnsmith@mail.com"],["Mary","mary@mail.com"],["John","johnnybravo@mail.com"]]
+Explanation:
+The first and second John's are the same person as they have the common email "johnsmith@mail.com".
+The third John and Mary are different people as none of their email addresses are used by other accounts.
+We could return these lists in any order, for example the answer [['Mary', 'mary@mail.com'], ['John', 'johnnybravo@mail.com'],
+['John', 'john00@mail.com', 'john_newyork@mail.com', 'johnsmith@mail.com']] would still be accepted.
+```
+
+**Example 2:**
+
+```
+Input: accounts = [["Gabe","Gabe0@m.co","Gabe3@m.co","Gabe1@m.co"],["Kevin","Kevin3@m.co","Kevin5@m.co","Kevin0@m.co"],["Ethan","Ethan5@m.co","Ethan4@m.co","Ethan0@m.co"],["Hanzo","Hanzo3@m.co","Hanzo1@m.co","Hanzo0@m.co"],["Fern","Fern5@m.co","Fern1@m.co","Fern0@m.co"]]
+Output: [["Ethan","Ethan0@m.co","Ethan4@m.co","Ethan5@m.co"],["Gabe","Gabe0@m.co","Gabe1@m.co","Gabe3@m.co"],["Hanzo","Hanzo0@m.co","Hanzo1@m.co","Hanzo3@m.co"],["Kevin","Kevin0@m.co","Kevin3@m.co","Kevin5@m.co"],["Fern","Fern0@m.co","Fern1@m.co","Fern5@m.co"]]
+```
+
+**Constraints:**
+
+- <code>1 <= accounts.length <= 1000</code>
+- <code>2 <= accounts[i].length <= 10</code>
+- <code>1 <= accounts[i][j].length <= 30</code>
+- <code>accounts[i][0]</code> consists of English letters.
+- <code>accounts[i][j] (for j > 0)</code> is a valid email.
+
+## Approach
+
+- These type of questions which talk about connecting components or linkage can mostly be solved through dsu. ( merging ). Normal component questions were about finding number which is good through dfs but can be done through dsu as well.
+- Any question of graph that keeps on changing edges should be thought through dsu.
+
+## Code
+
+```cpp
+class DisjointSet{
+    public:
+        vector<int> rank;
+        vector<int> parent;
+
+    DisjointSet(int n){
+        rank.resize(n + 1, 0);
+        parent.resize(n + 1);
+        for(int i = 0; i <= n; i++){
+            parent[i] = i;
+        }
+    }
+
+    int find(int node){
+        if(parent[node] != node) parent[node] = find(parent[node]);
+        return parent[node];
+    }
+
+    void unionByRank(int u, int v){
+        int upu = find(u);
+        int upv = find(v);
+        if(upu == upv) return;
+        if(rank[upu] < rank[upv]){
+            parent[upu] = upv;
+        } else if(rank[upv] < rank[upu]){
+            parent[upv] = upu;
+        } else{
+            parent[upv] = upu;
+            rank[upu]++;
+        }
+    }
+};
+
+class Solution {
+public:
+    vector<vector<string>> accountsMerge(vector<vector<string>>& accounts) {
+        int n = accounts.size();
+        DisjointSet ds(n);
+
+        unordered_map<string, int> userIndexMailMap;
+        vector<vector<string>> mergedMails(n);
+        vector<vector<string>> result;
+
+        for(int i = 0; i < n; i++){
+            for(int j = 1; j < accounts[i].size(); j++){
+                int user = i;// the user position is referd to using its index in account
+                string mail = accounts[i][j];
+
+                if(userIndexMailMap.find(mail) == userIndexMailMap.end()){
+                    // if not able to find in map then insert it
+                    userIndexMailMap[mail] = i; // ex. johnsmith@mail.com is of user that is at index 0 in accounts array
+                    // or mary@mail.com is of user which has index 2 in accounts array
+                } else {
+                    // if we are able to find then that means user with same mail already exists
+                    // merge these 2 users together using dsu
+                    ds.unionByRank(userIndexMailMap[mail], i);
+                }
+            }
+        }
+
+        for(auto it: userIndexMailMap){
+            string mail = it.first;
+            int userIndex = it.second;
+            // store mails to the top user
+            // ex. if john was found first then parent is 0 for both 0 and 1. they should be in the same list
+            int userParent = ds.find(userIndex);
+            mergedMails[userParent].push_back(mail);
+        }
+
+        for(int i = 0; i < mergedMails.size(); i++){
+            if(mergedMails[i].size() == 0) continue; // this user was already covered through its paretn
+            string user = accounts[i][0]; // this users name is stored here
+            sort(mergedMails[i].begin(), mergedMails[i].end()); // sort this users mails
+            vector<string> temp;
+            temp.push_back(user);
+            for(auto mail: mergedMails[i]){
+                temp.push_back(mail);
+            }
+            result.push_back(temp);
+        }
+
+        return result;
+    }
+};
 ```
