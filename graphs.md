@@ -104,6 +104,14 @@
 - [721. Accounts Merge](#721-accounts-merge)
   - [Approach](#approach-26)
   - [Code](#code-31)
+- [Number of islands 2](#number-of-islands-2)
+  - [Code](#code-32)
+- [827. Making A Large Island](#827-making-a-large-island)
+  - [Approach](#approach-27)
+  - [Code](#code-33)
+- [947. Most Stones Removed with Same Row or Column](#947-most-stones-removed-with-same-row-or-column)
+  - [Approach](#approach-28)
+  - [Code](#code-34)
 
 # [323. Number of Connected Components in an Undirected Graph](https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/description/)
 
@@ -3125,6 +3133,390 @@ public:
         }
 
         return result;
+    }
+};
+```
+
+# [Number of islands 2](https://www.geeksforgeeks.org/problems/number-of-islands/1)
+
+![alt text](images/image-13.png)
+
+## Code
+
+```cpp
+class DisjointSet {
+   private:
+    vector<int> parent;
+    vector<int> rank;
+
+   public:
+    DisjointSet(int n) {
+        parent.resize(n + 1);
+        rank.resize(n + 1, 0);
+
+        for (int i = 0; i <= n; i++) {
+            parent[i] = i;
+        }
+    }
+
+    int findParent(int node) {
+        if (parent[node] != node) parent[node] = findParent(parent[node]);
+        return parent[node];
+    }
+
+    void unionByRank(int u, int v) {
+        int pu = findParent(u);
+        int pv = findParent(v);
+
+        if (pu == pv) return;
+
+        if (rank[pu] < rank[pv]) {
+            parent[pu] = pv;
+        } else if (rank[pv] < rank[pu]) {
+            parent[pv] = pu;
+        } else {
+            parent[pv] = pu;
+            rank[pu]++;
+        }
+    }
+};
+
+class Solution {
+   public:
+    vector<int> numOfIslands(int n, int m, vector<vector<int>>& A) {
+        vector<vector<int>> mat(n, vector<int>(m, 0));  // matrix of n * m
+        DisjointSet ds(m * n);
+        vector<int> result;
+        int count = 0;
+
+        vector<pair<int, int>> directions = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+
+        for (auto& operation : A) {
+            int row = operation[0];
+            int col = operation[1];
+
+            // if already a land then no need to do anything
+            if (mat[row][col] == 1) {
+                result.push_back(count);
+                continue;
+            }
+
+            // if thats not the case consider this move as a new island
+            mat[row][col] = 1;
+            count++;
+
+            for (auto& [dy, dx] : directions) {
+                int newRow = row + dy;
+                int newCol = col + dx;
+
+                // representing a array cell [i, j] as i * m + j ex. 1, 0 will
+                // be 5 (1 * 5) + 0
+                int originalNode = row * m + col;
+                int adjacentNode = newRow * m + newCol;
+
+				// agar ek valid matrix config h
+				// adjacent cell ek land h
+				// and agar dono same island(component) ko belong nahi karte
+				// then we are merging these two islands together which we originally considered to be and island
+				// and reducing count
+                if (newRow >= 0 && newRow < n && newCol >= 0 && newCol < m &&
+                    mat[newRow][newCol] == 1 &&
+                    ds.findParent(originalNode) !=
+                        ds.findParent(adjacentNode)) {
+                    count--;
+                    ds.unionByRank(originalNode, adjacentNode);
+                }
+            }
+
+            result.push_back(count);
+        }
+
+    	return result;
+    }
+};
+```
+
+# [827. Making A Large Island](https://leetcode.com/problems/making-a-large-island/description/)
+
+You are given an <code>n x n</code> binary matrix <code>grid</code>. You are allowed to change **at most one** <code>0</code> to be <code>1</code>.
+
+Return the size of the largest **island** in <code>grid</code> after applying this operation.
+
+An **island** is a 4-directionally connected group of <code>1</code>s.
+
+**Example 1:**
+
+```
+Input: grid = [[1,0],[0,1]]
+Output: 3
+Explanation: Change one 0 to 1 and connect two 1s, then we get an island with area = 3.
+```
+
+**Example 2:**
+
+```
+Input: grid = [[1,1],[1,0]]
+Output: 4
+Explanation: Change the 0 to 1 and make the island bigger, only one island with area = 4.
+```
+
+**Example 3:**
+
+```
+
+Input: grid = [[1,1],[1,1]]
+Output: 4
+Explanation: Can't change any 0 to 1, only one island with area = 4.
+
+```
+
+**Constraints:**
+
+- <code>n == grid.length</code>
+- <code>n == grid[i].length</code>
+- <code>1 <= n <= 500</code>
+- <code>grid[i][j]</code> is either <code>0</code> or <code>1</code>.
+
+## Approach
+
+- Pattern: Dynamic Graph
+
+## Code
+
+```cpp
+class DisjointSet{
+private:
+    vector<int> parent;
+    vector<int> size;
+
+public:
+    DisjointSet(int n){
+        parent.resize(n + 1);
+        size.resize(n + 1, 1);
+        for(int i = 0; i <= n; i++){
+            parent[i] = i;
+        }
+    }
+
+    int findParent(int node){
+        if(parent[node] != node) parent[node] = findParent(parent[node]);
+        return parent[node];
+    }
+
+    bool isConnected(int u, int v){
+        return findParent(u) == findParent(v);
+    }
+
+    void unionBySize(int u, int v){
+        int pu = findParent(u);
+        int pv = findParent(v);
+
+        if(pu == pv) return;
+
+        if(size[pu] < size[pv]){
+            parent[pu] = pv;
+            size[pv] += size[pu];
+        } else {
+            parent[pv] = pu;
+            size[pu] += size[pv];
+        }
+    }
+
+    int getSize(int node){
+        return size[node];
+    }
+};
+
+/*
+    Create a disjoint set since it is a graph with dynamic edges
+    Now merge all islands together that are 1 so that they are connected if possible in the 4 directions
+    Again traverse the grid and for every 0 check adjacent cells if 1 then add there parents size for island size calculation if this parent was not already counted ex. below case 0 the size may get calculated multiple times if we dont consider parent
+    1 1 1
+    1 0 1
+    1 1 1
+*/
+class Solution {
+public:
+    int largestIsland(vector<vector<int>>& grid) {
+        int n = grid.size();
+        DisjointSet ds(n * n);
+        int maxIslandSize = 0;
+
+        vector<pair<int, int>> directions = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+
+        // make connected components
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < n; j++){
+                if(grid[i][j] == 1){
+                    for(auto& [dy, dx]: directions){
+                        int newRow = i + dy;
+                        int newCol = j + dx;
+                        int originalCellNumberMapping = i * n + j;
+                        int adjacentCellNumberMapping = newRow * n + newCol;
+
+                        // if valid config and is a land cell and not already connected then connect
+                        if(newRow < n && newRow >= 0 && newCol < n && newCol >= 0 && grid[newRow][newCol] == 1 && !ds.isConnected(originalCellNumberMapping, adjacentCellNumberMapping)){
+                            ds.unionBySize(originalCellNumberMapping, adjacentCellNumberMapping);
+                        }
+                    }
+                }
+            }
+        }
+
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < n; j++){
+                if(grid[i][j] == 0){
+                    unordered_set<int> parents;
+                    int islandSize = 0;
+                    for(auto& [dy, dx]: directions){
+                        int newRow = i + dy;
+                        int newCol = j + dx;
+                        int originalCellNumberMapping = i * n + j;
+                        int adjacentCellNumberMapping = newRow * n + newCol;
+                        // insert parents of all such 1 adjacent 1's we can find to a set to avoid duplicate parents
+                        // we can use this to calculate sizes afterwards
+                        if(newRow < n && newRow >= 0 && newCol < n && newCol >= 0 && grid[newRow][newCol] == 1){
+                            parents.insert(ds.findParent(adjacentCellNumberMapping));
+                        }
+                    }
+
+                    for(auto it: parents){
+                        islandSize += ds.getSize(it); // add sizes of all others
+                    }
+
+                    islandSize++; // will also count self
+                    maxIslandSize = max(islandSize, maxIslandSize);
+                }
+            }
+        }
+
+        // can be the case where there are no 0's present or somehow any original island was the largest one only ??
+        for(int i = 0; i < n; i++){
+            maxIslandSize = max(maxIslandSize, ds.getSize(i));
+        }
+
+        return maxIslandSize;
+    }
+};
+```
+
+# [947. Most Stones Removed with Same Row or Column](https://leetcode.com/problems/most-stones-removed-with-same-row-or-column/description/)
+
+On a 2D plane, we place <code>n</code> stones at some integer coordinate points. Each coordinate point may have at most one stone.
+
+A stone can be removed if it shares either **the same row or the same column** as another stone that has not been removed.
+
+Given an array <code>stones</code> of length <code>n</code> where <code>stones[i] = [x<sub>i</sub>, y<sub>i</sub>]</code> represents the location of the <code>i^th</code> stone, return the largest possible number of stones that can be removed.
+
+**Example 1:**
+
+```
+Input: stones = [[0,0],[0,1],[1,0],[1,2],[2,1],[2,2]]
+Output: 5
+Explanation: One way to remove 5 stones is as follows:
+1. Remove stone [2,2] because it shares the same row as [2,1].
+2. Remove stone [2,1] because it shares the same column as [0,1].
+3. Remove stone [1,2] because it shares the same row as [1,0].
+4. Remove stone [1,0] because it shares the same column as [0,0].
+5. Remove stone [0,1] because it shares the same row as [0,0].
+Stone [0,0] cannot be removed since it does not share a row/column with another stone still on the plane.
+```
+
+**Example 2:**
+
+```
+Input: stones = [[0,0],[0,2],[1,1],[2,0],[2,2]]
+Output: 3
+Explanation: One way to make 3 moves is as follows:
+1. Remove stone [2,2] because it shares the same row as [2,0].
+2. Remove stone [2,0] because it shares the same column as [0,0].
+3. Remove stone [0,2] because it shares the same row as [0,0].
+Stones [0,0] and [1,1] cannot be removed since they do not share a row/column with another stone still on the plane.
+```
+
+**Example 3:**
+
+```
+Input: stones = [[0,0]]
+Output: 0
+Explanation: [0,0] is the only stone on the plane, so you cannot remove it.
+```
+
+**Constraints:**
+
+- <code>1 <= stones.length <= 1000</code>
+- <code>0 <= x<sub>i</sub>, y<sub>i</sub> <= 10^4</code>
+- No two stones are at the same coordinate point.
+
+## Approach
+
+- Pattern: Counting components
+
+## Code
+
+```cpp
+/*
+    * If we look closely from a single component we can remove all stones except the last 1.
+    * So we can basically derive ans = each component - 1 => all stones - count of components
+*/
+class DisjointSet{
+private:
+    vector<int> parent;
+    vector<int> size;
+
+public:
+    DisjointSet(int n){
+        parent.resize(n + 1);
+        size.resize(n + 1, 1);
+        for(int i = 0; i <= n;i++){
+            parent[i] = i;
+        }
+    }
+
+    int findParent(int node){
+        if(parent[node] != node) parent[node] = findParent(parent[node]);
+        return parent[node];
+    }
+
+    void unionBySize(int u, int v){
+        int pu = findParent(u);
+        int pv = findParent(v);
+
+        if(size[pu] < size[pv]){
+            parent[pu] = pv;
+            size[pv] += pu;
+        } else {
+            parent[pv] = pu;
+            size[pu] += pv;
+        }
+    }
+};
+
+class Solution {
+public:
+    int removeStones(vector<vector<int>>& stones) {
+        // to find count of components we can either use dfs and count no of dfs calls(by creating adj list) or we can use union find and then find number of unique parents
+        int n = stones.size();
+        DisjointSet ds(n); // using stones[i] as tracker in this case
+        for(int i = 0; i < n; i++){
+            for(int j = i + 1; j < n; j++){
+                // if shares same row or same column with any stone coordinate then union stone position
+                if(stones[i][0] == stones[j][0] || stones[i][1] == stones[j][1]){
+                ds.unionBySize(i, j);
+                }
+            }
+        }
+        unordered_set<int> seen;
+
+        for(int i = 0; i < n; i++){
+            if(seen.find(ds.findParent(i)) == seen.end()){
+                seen.insert(ds.findParent(i));
+            }
+        }
+
+        int numberOfConnectedComponents = seen.size();
+
+        return n - numberOfConnectedComponents;
     }
 };
 ```
