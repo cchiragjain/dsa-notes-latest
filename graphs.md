@@ -112,6 +112,13 @@
 - [947. Most Stones Removed with Same Row or Column](#947-most-stones-removed-with-same-row-or-column)
   - [Approach](#approach-28)
   - [Code](#code-34)
+- [Strongly Connected Components/ Kosaraju Algorithm](#strongly-connected-components-kosaraju-algorithm)
+  - [Code \&\& Algo](#code--algo)
+- [1192. Critical Connections in a Network/ Tarjans Algorithm](#1192-critical-connections-in-a-network-tarjans-algorithm)
+  - [Approach](#approach-29)
+  - [Code](#code-35)
+- [Aritculation Point](#aritculation-point)
+  - [Code](#code-36)
 
 # [323. Number of Connected Components in an Undirected Graph](https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/description/)
 
@@ -3517,6 +3524,257 @@ public:
         int numberOfConnectedComponents = seen.size();
 
         return n - numberOfConnectedComponents;
+    }
+};
+```
+
+# [Strongly Connected Components/ Kosaraju Algorithm](https://www.geeksforgeeks.org/problems/strongly-connected-components-kosarajus-algo/1?utm_source=youtube&utm_medium=collab_striver_ytdescription&utm_campaign=strongly-connected-components-kosarajus-algo)
+
+- Only valid for directed graphs
+- Any pair (u, v) such that we can go from u to v and from v to u by traversing the graph
+- Single node is also a valid scc
+- ![alt text](images/image-14.png)
+- T.C => O(V + E)
+
+## Code && Algo
+
+```cpp
+/*
+    * Algorithm
+    * Find finishing time of each node using dfs and a stack
+    * Any node that finishes last will be at the top of stack after dfs.
+    This can be used as our starting node since will be the left most node
+    * Reverse the graph. This will break the edges b/w different scc that are there
+    * Original scc will not lose there structure since the cycle will still be there
+    * Again call dfs but from highest finishing time to lowest from stack
+    * number of components/ dfs calls will be the amount of scc
+*/
+class Solution {
+    private:
+        void dfs(int node, stack<int>& st, vector<bool>& visited,vector<vector<int>>& adj){
+            visited[node] = true;
+            for(int neighbour: adj[node]){
+                if(!visited[neighbour]){
+                    dfs(neighbour, st, visited, adj);
+                }
+            }
+            // push after this nodes dfs is done
+            st.push(node);
+        }
+
+        void dfs(int node, vector<bool>& visited,vector<vector<int>>& adj){
+            visited[node] = true;
+            for(int neighbour: adj[node]){
+                if(!visited[neighbour]){
+                    dfs(neighbour, visited, adj);
+                }
+            }
+        }
+
+  public:
+    int kosaraju(vector<vector<int>> &adj) {
+        int n = adj.size();
+        int num = 0;
+
+        vector<vector<int>> adjReversed(n);
+
+        stack<int> st;
+        vector<bool> visited(n, false);
+        // calculate finishing time
+        for(int i = 0; i < n; i++){
+            if(!visited[i]){
+                dfs(i, st, visited, adj);
+            }
+        }
+
+        // reverse edges
+        for(int i = 0; i < n; i++){
+            visited[i] = false;
+            for(int neighbour: adj[i]){
+                adjReversed[neighbour].push_back(i);
+            }
+        }
+
+        while(!st.empty()){
+            int node = st.top();
+            st.pop();
+
+            if(!visited[node]){
+                dfs(node, visited, adjReversed);
+                num++;
+            }
+        }
+
+        return num;
+    }
+};
+```
+
+# [1192. Critical Connections in a Network/ Tarjans Algorithm](https://leetcode.com/problems/critical-connections-in-a-network/description/)
+
+There are <code>n</code> servers numbered from <code>0</code> to <code>n - 1</code> connected by undirected server-to-server <code>connections</code> forming a network where <code>connections[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> represents a connection between servers <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code>. Any server can reach other servers directly or indirectly through the network.
+
+A critical connection is a connection that, if removed, will make some servers unable to reach some other server.
+
+Return all critical connections in the network in any order.
+
+**Example 1:**
+<img alt="" src="https://assets.leetcode.com/uploads/2019/09/03/1537_ex1_2.png" style="width: 198px; height: 248px;">
+
+```
+Input: n = 4, connections = [[0,1],[1,2],[2,0],[1,3]]
+Output: [[1,3]]
+Explanation: [[3,1]] is also accepted.
+```
+
+**Example 2:**
+
+```
+Input: n = 2, connections = [[0,1]]
+Output: [[0,1]]
+```
+
+**Constraints:**
+
+- <code>2 <= n <= 10^5</code>
+- <code>n - 1 <= connections.length <= 10^5</code>
+- <code>0 <= a<sub>i</sub>, b<sub>i</sub> <= n - 1</code>
+- <code>a<sub>i</sub> != b<sub>i</sub></code>
+- There are no repeated connections.
+
+## Approach
+
+- T.C => O(V + E) standard dfs using tarjans
+- Brute would be to for each edge remove it and then call dfs to find number of connected components if they are > 1 then it is a bridge. then undo it and remove next edge. T.C => V \* ( V + E )
+- better to learn this
+
+## Code
+
+```cpp
+/*
+    * Uses tarjans alogrithm
+    * Basically for each node we find the lowest time/ node from which we can reach this node except from the parent
+    * if the lowest time for any adjacent node is greater than that of the current node we can break this connection/ this is a bridge
+    * but if the low time is less or equal then that means there exists some other node through which we can reach this node so no point in breaking this edge
+    * If a neighbor can’t reach an earlier node through another path, that connection is critical.
+*/
+class Solution {
+private:
+    void dfs(int src, int parent, int time, vector<vector<int>>& adj, vector<bool>& visited, vector<int>& tin, vector<int>& low, vector<vector<int>>& result){
+        visited[src] = true;
+        tin[src] = time;
+        low[src] = time;
+        time++;
+
+        for(int neighbour: adj[src]){
+            if(neighbour == parent) continue;
+
+            if(!visited[neighbour]){
+                // apna dfs karke la
+                dfs(neighbour, src, time, adj, visited, tin, low, result);
+                // update the low time it may update on dfs call of neighbour
+                low[src] = min(low[src], low[neighbour]);
+
+                // if at any time neighbours low is higher than time for insertion of our src node then that means that there exists no other path through which this node can be visited so we can break this edge
+                if(low[neighbour] > tin[src]){
+                    result.push_back({src, neighbour});
+                }
+            } else {
+                // if already visited then no way this edge can be broken
+                // just update with low time if foudn
+                low[src] = min(low[src], low[neighbour]);
+            }
+        }
+    }
+public:
+    vector<vector<int>> criticalConnections(int n, vector<vector<int>>& connections) {
+        vector<vector<int>> adj(n);
+        vector<vector<int>> result;
+
+        vector<bool> visited(n, false);
+
+        vector<int> tin(n, -1); // stores time to reach this node/ time of insertion
+        vector<int> low(n, -1); // stores the lowest time to reach this node from all adjacent nodes
+
+        for(auto edge: connections){
+            int u = edge[0];
+            int v = edge[1];
+            adj[u].push_back(v);
+            adj[v].push_back(u);
+        }
+
+        dfs(0, -1, 0, adj, visited, tin, low, result);
+
+        return result;
+    }
+};
+```
+
+# [Aritculation Point](https://www.geeksforgeeks.org/problems/articulation-point-1/1?utm_source=youtube&utm_medium=collab_striver_ytdescription&utm_campaign=articulation-point)
+
+![alt text](images/image-15.png)
+
+- Learn this
+
+## Code
+
+```cpp
+class Solution {
+private:
+    void dfs(int src, int timer, int parent, vector<bool>& visited, vector<int> & tin
+    ,vector<int>& low, vector<bool>& mark, vector<int> adj[]){
+        visited[src] = true;
+        tin[src] = timer;
+        low[src] = timer;
+        timer++;
+        int children = 0;
+
+        for(int neighbour: adj[src]){
+            if(neighbour == parent) continue;
+
+            if(!visited[neighbour]){
+                dfs(neighbour, timer, src, visited, tin, low, mark, adj);
+                children++;
+                // update low found
+                low[src] = min(low[src], low[neighbour]);
+
+                // need to check for equal as well since need to reach before this node
+                // in the path as for equal the src node will also get removed
+                // find path such that it connects to someone before src
+                if(low[neighbour] >= tin[src] && parent != -1){
+                    mark[src] = true;
+                }
+            } else {
+                // if neighbour is already visited then dont take its low
+                // back edge exists here and low[neighbour] may not exactly reflect
+                // the proper case
+                // but take its insertion time
+                low[src] = min(low[src], tin[neighbour]);
+            }
+        }
+
+        // if starting node then can be an articulation point if has more
+        // than 1 child so that they can be broken
+        if(children > 1 && parent == -1){
+            mark[src] = true;
+        }
+    }
+  public:
+    vector<int> articulationPoints(int n, vector<int>adj[]) {
+        vector<bool> visited(n, false);
+        vector<int> tin(n, -1);
+        vector<int> low(n, -1);
+        vector<bool> mark(n, false);
+        vector<int> result;
+
+        dfs(0, 0, -1, visited, tin, low, mark, adj);
+
+        for(int i = 0; i < n; i++){
+            if(mark[i]) result.push_back(i);
+        }
+
+        if(result.size() == 0) return {-1};
+        return result;
     }
 };
 ```
