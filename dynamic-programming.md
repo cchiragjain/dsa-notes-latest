@@ -14,6 +14,12 @@
   - [Code](#code-2)
 - [Frog Jump with K Steps](#frog-jump-with-k-steps)
   - [Code](#code-3)
+- [198. House Robber](#198-house-robber)
+  - [Approach](#approach-2)
+  - [Code](#code-4)
+- [213. House Robber II](#213-house-robber-ii)
+  - [Approach](#approach-3)
+  - [Code](#code-5)
 
 # Questions List
 
@@ -417,6 +423,212 @@ private:
         int n = arr.size();
         vector<int> dp(n + 1, -1);
         return minimizeCostTabulation(k, arr);
+    }
+};
+```
+
+# [198. House Robber](https://leetcode.com/problems/house-robber/description/)
+
+You are a professional robber planning to rob houses along a street. Each house has a certain amount of money stashed, the only constraint stopping you from robbing each of them is that adjacent houses have security systems connected and <b>it will automatically contact the police if two adjacent houses were broken into on the same night</b>.
+
+Given an integer array <code>nums</code> representing the amount of money of each house, return the maximum amount of money you can rob tonight <b>without alerting the police</b>.
+
+**Example 1:**
+
+```
+Input: nums = [1,2,3,1]
+Output: 4
+Explanation: Rob house 1 (money = 1) and then rob house 3 (money = 3).
+Total amount you can rob = 1 + 3 = 4.
+```
+
+**Example 2:**
+
+```
+Input: nums = [2,7,9,3,1]
+Output: 12
+Explanation: Rob house 1 (money = 2), rob house 3 (money = 9) and rob house 5 (money = 1).
+Total amount you can rob = 2 + 9 + 1 = 12.
+```
+
+**Constraints:**
+
+- <code>1 <= nums.length <= 100</code>
+- <code>0 <= nums[i] <= 400</code>
+
+## Approach
+
+- Pattern: 1-d dp
+- T.C => O(2^N) reduced to O(N) and S.C => O(1) using space optimisation
+
+## Code
+
+```cpp
+class Solution {
+private:
+    int rob(vector<int>& nums, int i){
+        if(i == 0) return nums[0]; // no negative numbers are present since cost
+        // so should always pick this
+
+        if(i < 0) return 0; // out of bounds case may happen say when at house 1 and call pick
+
+        // can not pick adjacent elements so if we are picking it cant pick the adjacent
+        int pick = nums[i] + rob(nums, i - 2);
+        // if not picking consider current house as 0 and pick adjacent
+        int notPick = 0 + rob(nums, i - 1);
+
+        return max(pick, notPick);
+    }
+
+    int robMemo(vector<int>& nums, vector<int>& dp, int i){
+        if(i == 0) return nums[0]; // no negative numbers are present since cost
+        // so should always pick this
+
+        if(i < 0) return 0; // out of bounds case may happen say when at house 1 and call pick
+
+        if(dp[i] != -1) return dp[i];
+
+        // can not pick adjacent elements so if we are picking it cant pick the adjacent
+        int pick = nums[i] + robMemo(nums, dp, i - 2);
+        // if not picking consider current house as 0 and pick adjacent
+        int notPick = 0 + robMemo(nums, dp, i - 1);
+
+        return dp[i] = max(pick, notPick);
+    }
+
+    int robTab(vector<int>& nums){
+        int n = nums.size();
+        vector<int> dp(n, -1);
+
+        dp[0] = nums[0];
+
+        if(n > 1)
+            dp[1] = max(nums[0], nums[1]);
+
+        for(int i = 2; i < n; i++){
+            int pick = nums[i] + dp[i - 2];
+            int notPick = 0 + dp[i - 1];
+            dp[i] = max(pick, notPick);
+        }
+
+        return dp[n - 1];
+    }
+
+    int robSpaceOptimised(vector<int>& nums){
+        int n = nums.size();
+
+        int prev = nums[0];
+        int curr = nums[0];
+
+        if(n > 1)
+            curr = max(nums[0], nums[1]);
+
+        for(int i = 2; i < n; i++){
+            int pick = nums[i] + prev;
+            int notPick = 0 + curr;
+
+            int curri = max(pick, notPick);
+            prev = curr;
+            curr = curri;
+        }
+
+        return curr;
+    }
+
+public:
+    int rob(vector<int>& nums) {
+        int n = nums.size();
+        vector<int> dp(n + 1, -1);
+        // return rob(nums, n - 1);
+        // return robMemo(nums, dp, n - 1);
+        return robSpaceOptimised(nums);
+    }
+};
+```
+
+# [213. House Robber II](https://leetcode.com/problems/house-robber-ii/description/)
+
+You are a professional robber planning to rob houses along a street. Each house has a certain amount of money stashed. All houses at this place are **arranged in a circle.** That means the first house is the neighbor of the last one. Meanwhile, adjacent houses have a security system connected, and<b>it will automatically contact the police if two adjacent houses were broken into on the same night</b>.
+
+Given an integer array <code>nums</code> representing the amount of money of each house, return the maximum amount of money you can rob tonight **without alerting the police** .
+
+**Example 1:**
+
+```
+Input: nums = [2,3,2]
+Output: 3
+Explanation: You cannot rob house 1 (money = 2) and then rob house 3 (money = 2), because they are adjacent houses.
+```
+
+**Example 2:**
+
+```
+Input: nums = [1,2,3,1]
+Output: 4
+Explanation: Rob house 1 (money = 1) and then rob house 3 (money = 3).
+Total amount you can rob = 1 + 3 = 4.
+```
+
+**Example 3:**
+
+```
+Input: nums = [1,2,3]
+Output: 3
+```
+
+**Constraints:**
+
+- <code>1 <= nums.length <= 100</code>
+- <code>0 <= nums[i] <= 1000</code>
+
+## Approach
+
+- Pattern:
+
+## Code
+
+```cpp
+class Solution {
+    // taken from house robber
+private:
+    int robSpaceOptimised(vector<int>& nums){
+        int n = nums.size();
+
+        int prev = nums[0];
+        int curr = nums[0];
+
+        if(n > 1)
+            curr = max(nums[0], nums[1]);
+
+        for(int i = 2; i < n; i++){
+            int pick = nums[i] + prev;
+            int notPick = 0 + curr;
+
+            int curri = max(pick, notPick);
+            prev = curr;
+            curr = curri;
+        }
+
+        return curr;
+    }
+
+// the only difference in this problems as compared to house robber 1 is that
+// first and last elements are also considered elements
+// so answer can either be from 0 to n - 2 or 1 to n - 1 in array taking maximum from both
+public:
+    int rob(vector<int>& nums) {
+        int n = nums.size();
+
+        if(n == 1) return nums[0];
+
+        vector<int> temp1, temp2;
+
+        for(int i = 0; i < n; i++){
+            if(i != 0) temp1.push_back(nums[i]);
+            if(i != n - 1) temp2.push_back(nums[i]);
+        }
+
+        return max(robSpaceOptimised(temp1), robSpaceOptimised(temp2));
     }
 };
 ```
