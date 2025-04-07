@@ -31,6 +31,7 @@
   - Recursion + Memoisation ( top down approach )
   - Loops + DS (bottom up approach)
     - Space Optimisation ( can be done for some problems to reduce space complexity required )
+- Time complexity of recursion generally -> O(branches^height of tree) ( 2 ^ n => har jagah 2 option h fir unke 2 option h ... 2 _ 2 _ 2 ...)
 
 # [509. Fibonacci Number](https://leetcode.com/problems/fibonacci-number/description/)
 

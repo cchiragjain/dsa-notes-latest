@@ -355,7 +355,7 @@ class Solution {
             vector<pair<int, int>> directions = {{0, -1}, {0, 1}, {1, 0}, {-1, 0}};
 
             while(!q.empty()){
-                auto& [row, col] = q.front();
+                auto [row, col] = q.front();
                 q.pop();
 
                 for(auto& [dy, dx]: directions){
