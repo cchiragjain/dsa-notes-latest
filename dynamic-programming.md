@@ -20,6 +20,9 @@
 - [213. House Robber II](#213-house-robber-ii)
   - [Approach](#approach-3)
   - [Code](#code-5)
+- [55. Jump Game](#55-jump-game)
+  - [Approach](#approach-4)
+  - [Code](#code-6)
 
 # Questions List
 
@@ -630,6 +633,117 @@ public:
         }
 
         return max(robSpaceOptimised(temp1), robSpaceOptimised(temp2));
+    }
+};
+```
+
+# [55. Jump Game](https://leetcode.com/problems/jump-game/description/)
+
+You are given an integer array <code>nums</code>. You are initially positioned at the array's **first index** , and each element in the array represents your maximum jump length at that position.
+
+Return <code>true</code> if you can reach the last index, or <code>false</code> otherwise.
+
+**Example 1:**
+
+```
+Input: nums = [2,3,1,1,4]
+Output: true
+Explanation: Jump 1 step from index 0 to 1, then 3 steps to the last index.
+```
+
+**Example 2:**
+
+```
+Input: nums = [3,2,1,0,4]
+Output: false
+Explanation: You will always arrive at index 3 no matter what. Its maximum jump length is 0, which makes it impossible to reach the last index.
+```
+
+**Constraints:**
+
+- <code>1 <= nums.length <= 10^4</code>
+- <code>0 <= nums[i] <= 10^5</code>
+
+## Approach
+
+- Pattern:
+
+## Code
+
+```cpp
+class Solution {
+private:
+    bool canJump(vector<int>& nums, int currentStep, int n, vector<int>& memo){
+        if(currentStep == n - 1){
+            return true;
+        } else if(currentStep >= n) {
+            return false;
+        }
+
+        // 0 and 1 can be used as false and true as well
+        if(memo[currentStep] != -1) return memo[currentStep];
+
+        int maxJump = nums[currentStep];
+        // if standing at 2 then can take a jump of 1 or 2
+        // trying both and checking which one reaches first
+        for(int i = 1; i <= maxJump; i++){
+            if(canJump(nums, currentStep + i, n, memo)) {
+                memo[currentStep + i] = 1;
+                return true;
+            }
+        }
+
+        memo[currentStep] = 0;
+        // if starting from this not possible then return false
+        return memo[currentStep];
+    }
+
+    bool canJumpTabulation(vector<int>& nums, int n){
+        vector<int> dp(n, -1);
+        dp[n - 1] = 1; // if at last index can always reach there ( already there )
+
+        // now check from behind if doing nums[i] jump can reach an index from where we can reach end then using i we can also reach end
+
+        for(int i = n - 2; i >= 0; i--){
+            int maxJump = nums[i];
+            bool canReach = false;
+            for(int j = 1; j <= maxJump; j++){
+                int newPosition = i + j; // current + jump size
+                if(newPosition < n && dp[newPosition] == 1){
+                    dp[i] = 1;
+                    canReach = true;
+                    // if was able to reach through any then dont need to check for others
+                    break;
+                }
+            }
+            // will only reach here if the loop did not break then was not able to find any position
+            if(canReach == false) dp[i] = 0;
+        }
+
+        return dp[0] == 1;
+    }
+
+public:
+    bool canJump(vector<int>& nums) {
+        int currentStep = 0;
+        int n = nums.size();
+        // -1 means not solved
+        // 0 means cant reach
+        // 1 means can reach
+        // vector<int> memo(n, -1);
+
+        // return canJump(nums, currentStep, n, memo);
+        // return canJumpTabulation(nums, n);
+
+        // if we see the dp tabulation only need the last position where we can reach
+        int lastPos = n - 1; // position of last good index from where we can reach end
+        for(int currentPos = n - 2; currentPos >= 0; currentPos--){
+            if(nums[currentPos] + currentPos >= lastPos) {
+                lastPos = currentPos; // we can reach this
+            }
+        }
+
+        return lastPos == 0;
     }
 };
 ```

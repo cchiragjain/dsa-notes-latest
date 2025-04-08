@@ -19,6 +19,25 @@
 - [1710. Maximum Units on a Truck](#1710-maximum-units-on-a-truck)
   - [Approach](#approach-3)
   - [Code](#code-5)
+- [435. Non-overlapping Intervals](#435-non-overlapping-intervals)
+  - [Approach](#approach-4)
+  - [Code](#code-6)
+- [56. Merge Intervals](#56-merge-intervals)
+  - [Approach](#approach-5)
+  - [Code](#code-7)
+- [452. Minimum Number of Arrows to Burst Balloons](#452-minimum-number-of-arrows-to-burst-balloons)
+  - [Approach](#approach-6)
+  - [Code](#code-8)
+- [134. Gas Station](#134-gas-station)
+  - [Approach](#approach-7)
+  - [Code](#code-9)
+- [when to use which sorting in case of interval problems](#when-to-use-which-sorting-in-case-of-interval-problems)
+- [253. Meeting Rooms II](#253-meeting-rooms-ii)
+  - [Approach](#approach-8)
+  - [Code](#code-10)
+- [621. Task Scheduler](#621-task-scheduler)
+  - [Approach](#approach-9)
+  - [Code](#code-11)
 
 # Greedy Algorithm
 
@@ -430,6 +449,500 @@ public:
         }
 
         return maxUnits;
+    }
+};
+```
+
+# [435. Non-overlapping Intervals](https://leetcode.com/problems/non-overlapping-intervals/description/)
+
+Given an array of intervals <code>intervals</code> where <code>intervals[i] = [start<sub>i</sub>, end<sub>i</sub>]</code>, return the minimum number of intervals you need to remove to make the rest of the intervals non-overlapping.
+
+**Note** that intervals which only touch at a point are **non-overlapping** . For example, <code>[1, 2]</code> and <code>[2, 3]</code> are non-overlapping.
+
+**Example 1:**
+
+```
+Input: intervals = [[1,2],[2,3],[3,4],[1,3]]
+Output: 1
+Explanation: [1,3] can be removed and the rest of the intervals are non-overlapping.
+```
+
+**Example 2:**
+
+```
+Input: intervals = [[1,2],[1,2],[1,2]]
+Output: 2
+Explanation: You need to remove two [1,2] to make the rest of the intervals non-overlapping.
+```
+
+**Example 3:**
+
+```
+Input: intervals = [[1,2],[2,3]]
+Output: 0
+Explanation: You don't need to remove any of the intervals since they're already non-overlapping.
+```
+
+**Constraints:**
+
+- <code>1 <= intervals.length <= 10^5</code>
+- <code>intervals[i].length == 2</code>
+- <code>-5 _ 10^4 <= start<sub>i</sub> < end<sub>i</sub> <= 5 _ 10^4</code>
+
+## Approach
+
+- Pattern: activity selection
+- we sort by end time, because:
+
+The earlier an interval ends, the more room we leave for future intervals.
+
+This maximizes the number of non-overlapping intervals.
+
+## Code
+
+```cpp
+class Solution {
+private:
+    static bool comp(vector<int>& a, vector<int>& b){
+        return a[1] < b[1];
+    }
+public:
+    int eraseOverlapIntervals(vector<vector<int>>& intervals) {
+        // similar to activity selection/ n meetings problem
+        // in order to find number of intervals to remove so that the rest are non overlapping we can just find max number of non overlapping intervals instead
+        int n = intervals.size();
+        sort(intervals.begin(), intervals.end(), comp);
+
+        // these are sorted on the basis of there end time now
+        // think of this like meeting times only
+
+        int count = 1; // count non overlapping intervals
+        int lastIntervalEndTime = intervals[0][1];
+        for(int i = 1; i < n; i++){
+            int start = intervals[i][0];
+            int end = intervals[i][1];
+
+            if(start >= lastIntervalEndTime) {
+                count++;
+                lastIntervalEndTime = end;
+            }
+        }
+
+        return n - count;
+    }
+};
+```
+
+# [56. Merge Intervals](https://leetcode.com/problems/merge-intervals/description/)
+
+Given an arrayof <code>intervals</code>where <code>intervals[i] = [start<sub>i</sub>, end<sub>i</sub>]</code>, merge all overlapping intervals, and return an array of the non-overlapping intervals that cover all the intervals in the input.
+
+**Example 1:**
+
+```
+Input: intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Since intervals [1,3] and [2,6] overlap, merge them into [1,6].
+```
+
+**Example 2:**
+
+```
+Input: intervals = [[1,4],[4,5]]
+Output: [[1,5]]
+Explanation: Intervals [1,4] and [4,5] are considered overlapping.
+```
+
+**Constraints:**
+
+- <code>1 <= intervals.length <= 10^4</code>
+- <code>intervals[i].length == 2</code>
+- <code>0 <= start<sub>i</sub> <= end<sub>i</sub> <= 10^4</code>
+
+## Approach
+
+- Pattern:
+
+## Code
+
+```cpp
+class Solution {
+// private:
+//     static bool comp(vector<int>& a, vector<int>& b){
+//         return a[1] != b[1] ? a[1] < b[1] : a[0] < b[0];
+//     }
+public:
+    vector<vector<int>> merge(vector<vector<int>>& intervals) {
+        // we need to merge the interval which can be done simply by comparing interval end to next interval start and pushing to vector
+        // but there exists cases like [[1,3], [2, 6], [6, 10]]
+        // now first 2 will merge in one 1, 6 but then 6, 10 can also be merged to return 1,10 which is one final interval
+
+        // there is a difference between this merge problem and finding overlap problem/ meetings problem. in that we wanted to maximise the count of intervals. so earlier a interval ends we greedily took it the more room we have for more intervals
+        // in this we want to find early start points
+        // rule merge -> start
+        // max/ min interval -> end
+        sort(intervals.begin(), intervals.end());
+        int n = intervals.size();
+
+        vector<vector<int>> merged;
+        merged.push_back(intervals[0]);
+
+        for(int i = 1; i < n; i++){
+            int lastMergedStartTime = merged.back()[0];
+            int lastMergedEndTime = merged.back()[1];
+
+            int start = intervals[i][0];
+            int end = intervals[i][1];
+
+            if(start > lastMergedEndTime){
+                merged.push_back({start,end});
+            } else if(end > lastMergedEndTime){
+                // if that is not the case need to update the last merged interval end time in order to merge this
+                // ex. if [1,3] was there and we are now at [2,6] then can just change 1,3 to 1, 6 to reflect changes
+
+                merged.back()[1] = end;
+            }
+        }
+
+        return merged;
+    }
+};
+```
+
+# [452. Minimum Number of Arrows to Burst Balloons](https://leetcode.com/problems/minimum-number-of-arrows-to-burst-balloons/description/)
+
+There are some spherical balloons taped onto a flat wall that represents the XY-plane. The balloons are represented as a 2D integer array <code>points</code> where <code>points[i] = [x<sub>start</sub>, x<sub>end</sub>]</code> denotes a balloon whose **horizontal diameter** stretches between <code>x<sub>start</sub></code> and <code>x<sub>end</sub></code>. You do not know the exact y-coordinates of the balloons.
+
+Arrows can be shot up **directly vertically** (in the positive y-direction) from different points along the x-axis. A balloon with <code>x<sub>start</sub></code> and <code>x<sub>end</sub></code> is **burst** by an arrow shot at <code>x</code> if <code>x<sub>start</sub> <= x <= x<sub>end</sub></code>. There is **no limit** to the number of arrows that can be shot. A shot arrow keeps traveling up infinitely, bursting any balloons in its path.
+
+Given the array <code>points</code>, return the **minimum** number of arrows that must be shot to burst all balloons.
+
+**Example 1:**
+
+```
+Input: points = [[10,16],[2,8],[1,6],[7,12]]
+Output: 2
+Explanation: The balloons can be burst by 2 arrows:
+- Shoot an arrow at x = 6, bursting the balloons [2,8] and [1,6].
+- Shoot an arrow at x = 11, bursting the balloons [10,16] and [7,12].
+```
+
+**Example 2:**
+
+```
+Input: points = [[1,2],[3,4],[5,6],[7,8]]
+Output: 4
+Explanation: One arrow needs to be shot for each balloon for a total of 4 arrows.
+```
+
+**Example 3:**
+
+```
+Input: points = [[1,2],[2,3],[3,4],[4,5]]
+Output: 2
+Explanation: The balloons can be burst by 2 arrows:
+- Shoot an arrow at x = 2, bursting the balloons [1,2] and [2,3].
+- Shoot an arrow at x = 4, bursting the balloons [3,4] and [4,5].
+```
+
+**Constraints:**
+
+- <code>1 <= points.length <= 10^5</code>
+- <code>points[i].length == 2</code>
+- <code>-2^31 <= x<sub>start</sub> < x<sub>end</sub> <= 2^31 - 1</code>
+
+## Approach
+
+- Pattern: can be seen that the problem asks for min/ max of intervals. sort end ascending
+-
+
+## Code
+
+```cpp
+class Solution {
+private:
+    static bool comp(vector<int>& a, vector<int>& b){
+        return a[1] < b[1];
+    }
+public:
+    int findMinArrowShots(vector<vector<int>>& points) {
+        sort(points.begin(), points.end(), comp);
+        int n = points.size();
+
+        int count = 1;
+        int lastShot = points[0][1];
+
+        for(int i = 1; i < n; i++){
+            int xStart = points[i][0];
+            int xEnd = points[i][1];
+
+            if(xStart <= lastShot && xEnd >= lastShot){
+                // this shot will be covered with the previous arrow
+                // if say shot at 5 then covers both 2, 5 and 1,6
+            } else {
+                // new arrow is needed
+                count++;
+                lastShot = xEnd; // shooting as far right possible in order to cover more axises
+            }
+        }
+
+        return count;
+    }
+};
+```
+
+# [134. Gas Station](https://leetcode.com/problems/gas-station/description/)
+
+There are <code>n</code> gas stations along a circular route, where the amount of gas at the <code>i^th</code> station is <code>gas[i]</code>.
+
+You have a car with an unlimited gas tank and it costs <code>cost[i]</code> of gas to travel from the <code>i^th</code> station to its next <code>(i + 1)^th</code> station. You begin the journey with an empty tank at one of the gas stations.
+
+Given two integer arrays <code>gas</code> and <code>cost</code>, return the starting gas station's index if you can travel around the circuit once in the clockwise direction, otherwise return <code>-1</code>. If there exists a solution, it is **guaranteed** to be **unique** .
+
+**Example 1:**
+
+```
+Input: gas = [1,2,3,4,5], cost = [3,4,5,1,2]
+Output: 3
+Explanation:
+Start at station 3 (index 3) and fill up with 4 unit of gas. Your tank = 0 + 4 = 4
+Travel to station 4. Your tank = 4 - 1 + 5 = 8
+Travel to station 0. Your tank = 8 - 2 + 1 = 7
+Travel to station 1. Your tank = 7 - 3 + 2 = 6
+Travel to station 2. Your tank = 6 - 4 + 3 = 5
+Travel to station 3. The cost is 5. Your gas is just enough to travel back to station 3.
+Therefore, return 3 as the starting index.
+```
+
+**Example 2:**
+
+```
+Input: gas = [2,3,4], cost = [3,4,3]
+Output: -1
+Explanation:
+You can't start at station 0 or 1, as there is not enough gas to travel to the next station.
+Let's start at station 2 and fill up with 4 unit of gas. Your tank = 0 + 4 = 4
+Travel to station 0. Your tank = 4 - 3 + 2 = 3
+Travel to station 1. Your tank = 3 - 3 + 3 = 3
+You cannot travel back to station 2, as it requires 4 unit of gas but you only have 3.
+Therefore, you can't travel around the circuit once no matter where you start.
+```
+
+**Constraints:**
+
+- <code>n == gas.length == cost.length</code>
+- <code>1 <= n <= 10^5</code>
+- <code>0 <= gas[i], cost[i] <= 10^4</code>
+
+## Approach
+
+- Can also do brute force as well checking from each i travel to all other elements if non negative tank is there. For rotation use modulo operator. ex. if array [0,1,2,3] and start from i = 3 then to go back to i = 1 using iterator we can do in normal loop i will become 5 but we can do i % n => 5 % 4 = 1 to go there.
+
+## Code
+
+```cpp
+class Solution {
+    // think of gas like earning and cost like spending
+    // we can not traverse if our earning is less then our cost
+    // but if it is more or equal then it is possible
+public:
+    int canCompleteCircuit(vector<int>& gas, vector<int>& cost) {
+        int n = gas.size();
+        int totalGas = 0;
+        int totalCost = 0;
+
+        for(int i = 0; i < n; i++){
+            totalGas += gas[i];
+            totalCost += cost[i];
+        }
+
+        if(totalGas < totalCost) return -1;
+
+        int station = 0;
+        int current = 0;
+
+        for(int i = 0; i < n; i++){
+            // gas[i] - cost[i] + current is cost for moving forward
+            // if that becomes negative then this cant be our station
+            if(current + gas[i] - cost[i] < 0) {
+                current = 0;
+                station = i + 1; // check with this station
+            } else {
+                current += gas[i] - cost[i];
+            }
+        }
+
+        return station;
+    }
+};
+```
+
+# when to use which sorting in case of interval problems
+
+1. Start Time: Process intervals in the order they begin, merge intervals, detect overlaps early
+2. End Time: Choose intervals that finish the earliest, avoid conflicts, schedule efficiently
+
+# [253. Meeting Rooms II](https://leetcode.com/problems/meeting-rooms-ii/description/)
+
+Given an array of meeting time intervals <code>intervals</code> where <code>intervals[i] = [start<sub>i</sub>, end<sub>i</sub>]</code>, return the minimum number of conference rooms required.
+
+**Example 1:**
+
+```
+Input: intervals = [[0,30],[5,10],[15,20]]
+Output: 2
+```
+
+**Example 2:**
+
+```
+Input: intervals = [[7,10],[2,4]]
+Output: 1
+```
+
+**Constraints:**
+
+- <code>1 <=intervals.length <= 10^4</code>
+- <code>0 <= start<sub>i</sub> < end<sub>i</sub> <= 10^6</code>
+
+## Approach
+
+- Pattern:
+
+## Code
+
+```cpp
+class Solution {
+public:
+    // normal interval approach/ acitivty seleciton will not work since need to find overlap with not jsut previous but all previous
+
+    int minMeetingRooms(vector<vector<int>>& intervals) {
+        int n = intervals.size();
+
+        // sort on the basis of start time so that logically we assing rooms to those meetings first that want to start first
+        sort(intervals.begin(), intervals.end());
+        priority_queue<int, vector<int>, greater<int>> pq; // stores the earliest finishing meetings. so when we need to assign room to a new meeting check with this if meeting can finish before then can just assign this room
+
+        int roomCount = 1;
+        pq.push(intervals[0][1]); // this meeting will start the earliest so it will occupy the first room. other meetings will have to wait for this one to get this room or take a new room
+
+        for(int i = 1; i < n; i++){
+            int startTime = intervals[i][0];
+            int endTime = intervals[i][1];
+
+            if(startTime >= pq.top()){
+                pq.pop(); // use the same room
+            } else {
+                roomCount++;
+            }
+            // in both cases we need to consider the end time for this new meeting
+            pq.push(endTime);
+        }
+
+        return roomCount;
+    }
+};
+```
+
+# [621. Task Scheduler](https://leetcode.com/problems/task-scheduler/description/)
+
+You are given an array of CPU <code>tasks</code>, each labeled with a letter from A to Z, and a number <code>n</code>. Each CPU interval can be idle or allow the completion of one task. Tasks can be completed in any order, but there's a constraint: there has to be a gap of **at least** <code>n</code> intervals between two tasks with the same label.
+
+Return the **minimum** number of CPU intervals required to complete all tasks.
+
+**Example 1:**
+
+<div class="example-block" style="border-color: var(--border-tertiary); border-left-width: 2px; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem; margin-top: 1rem; overflow: visible; padding-left: 1rem;">
+Input: tasks = ["A","A","A","B","B","B"], n = 2
+
+Output: 8
+
+Explanation: A possible sequence is: A -> B -> idle -> A -> B -> idle -> A -> B.
+
+After completing task A, you must wait two intervals before doing A again. The same applies to task B. In the 3^rd interval, neither A nor B can be done, so you idle. By the 4^th interval, you can do A again as 2 intervals have passed.
+
+**Example 2:**
+
+<div class="example-block" style="border-color: var(--border-tertiary); border-left-width: 2px; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem; margin-top: 1rem; overflow: visible; padding-left: 1rem;">
+Input: tasks = ["A","C","A","B","D","B"], n = 1
+
+Output: 6
+
+Explanation: A possible sequence is: A -> B -> C -> D -> A -> B.
+
+With a cooling interval of 1, you can repeat a task after just one other task.
+
+**Example 3:**
+
+<div class="example-block" style="border-color: var(--border-tertiary); border-left-width: 2px; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem; margin-top: 1rem; overflow: visible; padding-left: 1rem;">
+Input: tasks = ["A","A","A", "B","B","B"], n = 3
+
+Output: 10
+
+Explanation: A possible sequence is: A -> B -> idle -> idle -> A -> B -> idle -> idle -> A -> B.
+
+There are only two types of tasks, A and B, which need to be separated by 3 intervals. This leads to idling twice between repetitions of these tasks.
+
+**Constraints:**
+
+- <code>1 <= tasks.length <= 10^4</code>
+- <code>tasks[i]</code> is an uppercase English letter.
+- <code>0 <= n <= 100</code>
+
+## Approach
+
+- Pattern:
+
+## Code
+
+```cpp
+class Solution {
+public:
+    int leastInterval(vector<char>& tasks, int n) {
+        int totalTime = 0;
+
+        // create frequency map
+        unordered_map<char, int> freq;
+        priority_queue<int> pq; // will store the task with the most frequency at top
+        // it is best to pick the task with the most frequency first to efficiently distribute other tasks after this in the tasks cooldown perido
+
+        for(char task: tasks){
+            freq[task]++;
+        }
+        for(auto f: freq){
+            pq.push(f.second); // dont really care about the order
+        }
+
+        while(!pq.empty()){
+            vector<int> temp; // stores that levels uncompleted elements
+            int cycle = n + 1; // in this segement say after picking A then need to complete n more tasks before we can pick A again
+            // complete this cycle
+            while(cycle > 0 && !pq.empty()){
+                int currentMaxFrequency = pq.top();
+                pq.pop();
+
+                currentMaxFrequency--;
+                cycle--;
+                totalTime++;
+
+                if(currentMaxFrequency > 0){
+                    // if this elements frequency still remains
+                    temp.push_back(currentMaxFrequency);
+                }
+            }
+
+            // if we had elements with remaining freq insert back into pq for use in next cycle
+            for(int num: temp) pq.push(num);
+
+            // if cycle length is remaining then that means no element present that can be used this should be used as idle time
+            // also only add this if elements are present
+            // since if pq is empty then that means everything was completed no need to add extra idle time
+            if(!pq.empty()){
+                totalTime += cycle;
+            }
+        }
+
+        return totalTime;
     }
 };
 ```
