@@ -158,6 +158,16 @@ public:
 - Problems where need to explore all paths/ ways to figure something out. ex.
   - Problem asking for count the total number of ways.
   - Given multiple ways of performing a task, it is asked which way will yield the minimum or maximum output.
+- ex.
+  - The first characteristic that is common in DP problems is that the problem will ask for the optimum value (maximum or minimum) of something, or the number of ways there are to do something. For example:
+    - **What is the minimum cost of doing...**
+    - **What is the maximum profit from...**
+    - **How many ways are there to do...**
+    - **What is the longest possible...**
+    - **Is it possible to reach a certain point...**
+- **These are also possible that they may be greedy algo questions. So in that check with examples that whether if doing something now wont affect our future decisions. ex. in house robbber problem if we pick the highest house only in adjacent then may not be able to pick the ones with highest money.**
+- **To summarize: if a problem is asking for the maximum/minimum/longest/shortest of something, the number of ways to do something, or if it is possible to reach a certain point, it is probably greedy or DP. in general, if the problem has constraints that cause decisions to affect other decisions, such as using one element prevents the usage of other elements, then we should consider using dynamic programming to solve the problem. These two characteristics can be used to identify if a problem should be solved with DP.**
+- agar element pick karke baakion ka use kharab hoga then we should mostly use dp but baaki still available h then try greedy. if problem has above things.
 
 ## How to solve/ write recurrence relation
 
